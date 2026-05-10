@@ -6,14 +6,14 @@
 
 using namespace std;
 
-fstream getStream(const char *fileName) {
-    fstream streamFile(fileName);
-    if (!streamFile.is_open()) {
-        throw invalid_argument("`" + string(fileName) +
+fstream getStream(const char *file_name) {
+    fstream stream_file(file_name);
+    if (!stream_file.is_open()) {
+        throw invalid_argument("`" + string(file_name) +
                                "` file is not available");
     }
 
-    return streamFile;
+    return stream_file;
 }
 
 const float ticks_per_revolution = 1024;
@@ -43,28 +43,28 @@ struct Nrk {
     float y = 0;
     float theta = 0;
 
-    WheelImpulse lastImpulse;
+    WheelImpulse last_impulse;
 
-    Nrk& operator+=(const WheelImpulse& newImpulse) {
-        const WheelImpulse impulseDifference = lastImpulse-newImpulse;
+    Nrk& operator+=(const WheelImpulse& new_impulse) {
+        const WheelImpulse impulse_difference = last_impulse-new_impulse;
 
-        const float d_left = (impulseDifference.fl_ticks + impulseDifference.bl_ticks) / 2;
-        const float d_right = (impulseDifference.fr_ticks + impulseDifference.br_ticks) / 2;
+        const float d_left = (impulse_difference.fl_ticks + impulse_difference.bl_ticks) / 2;
+        const float d_right = (impulse_difference.fr_ticks + impulse_difference.br_ticks) / 2;
 
         const float distance_per_tick = 2 * M_PI * wheel_radius_m / ticks_per_revolution;
 
-        const float dL = d_left * distance_per_tick;
-        const float dR = d_right * distance_per_tick;
+        const float d_l = d_left * distance_per_tick;
+        const float d_r = d_right * distance_per_tick;
 
-        const float distance = (dL + dR) / 2;
-        const float dTheta = (dR - dL) / wheelbase_m;
+        const float distance = (d_l + d_r) / 2;
+        const float d_theta = (d_r - d_l) / wheelbase_m;
 
-        x += distance * cos(theta + dTheta / 2);
-        y += distance * sin(theta + dTheta / 2);
+        x += distance * cos(theta + d_theta / 2);
+        y += distance * sin(theta + d_theta / 2);
 
-        theta +=dTheta;
+        theta +=d_theta;
 
-        lastImpulse = newImpulse;
+        last_impulse = new_impulse;
 
         return *this;
     }
@@ -82,7 +82,7 @@ fstream& operator>>(fstream& is, WheelImpulse& impulse) {
 
 ostream& operator<<(ostream& os, const Nrk& nrk) {
     os 
-     << nrk.lastImpulse.timestamp << " "
+     << nrk.last_impulse.timestamp << " "
      << nrk.x << " "
      << nrk.y << " "
      << nrk.theta;
@@ -97,30 +97,30 @@ int main(int argc, char** argv) {
             throw invalid_argument("usage: ugv_odometry <input_path>\n");
         }
 
-        fstream inputFile = getStream(argv[1]);
-        WheelImpulse newImpulse;
+        fstream input_file = getStream(argv[1]);
+        WheelImpulse new_impulse;
         Nrk nrk;
 
-        inputFile >> nrk.lastImpulse;
+        input_file >> nrk.last_impulse;
         
         cout << nrk << endl;
 
         while(true) {
-            inputFile >> newImpulse;
+            input_file >> new_impulse;
 
-            if (inputFile.eof()) {
+            if (input_file.eof()) {
                 cout << "Data is uploaded" << endl;
                 
                 break;
             }
 
-            nrk += newImpulse;
+            nrk += new_impulse;
 
             cout << nrk << endl;
 
         }
         
-        inputFile.close();
+        input_file.close();
 
         return 0;
     } catch (std::invalid_argument e) {
