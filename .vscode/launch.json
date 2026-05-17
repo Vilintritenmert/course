@@ -35,7 +35,7 @@
       "request": "launch",
       "program": "${workspaceFolder}/build/debug/homework_04/ugv_odometry",
       "args": [
-        "${workspaceFolder}/homework_04/data/straight.txt"
+        "${workspaceFolder}/homework_04/data/incorrect.txt"
       ],
       "stopAtEntry": false,
       "cwd": "${workspaceFolder}",

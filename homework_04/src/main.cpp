@@ -70,12 +70,24 @@ struct Nrk {
     }
 };
 
-fstream& operator>>(fstream& is, WheelImpulse& impulse) {
-    is >> impulse.timestamp 
-       >> impulse.fl_ticks
-       >> impulse.fr_ticks
-       >> impulse.bl_ticks
-       >> impulse.br_ticks;
+struct EnsureNextParameterExist {};
+
+istream& operator>>(istream& is,  EnsureNextParameterExist) {
+    if (is.eof()) {
+        throw invalid_argument("Input file is incorrect");
+    }
+
+    return is;
+}
+
+istream& operator>>(istream& is, WheelImpulse& impulse) {
+    EnsureNextParameterExist validateInput; 
+
+    is >> impulse.timestamp >> validateInput 
+       >> impulse.fl_ticks >> validateInput
+       >> impulse.fr_ticks >> validateInput
+       >> impulse.bl_ticks >> validateInput
+       >> impulse.br_ticks ;
     
     return is;  
 }
@@ -97,20 +109,17 @@ int main(int argc, char** argv) {
             throw invalid_argument("usage: ugv_odometry <input_path>\n");
         }
 
+        
         fstream input_file = getStream(argv[1]);
         WheelImpulse new_impulse;
         Nrk nrk;
 
         input_file >> nrk.last_impulse;
         
-        cout << nrk << endl;
-
         while(true) {
             input_file >> new_impulse;
 
             if (input_file.eof()) {
-                cout << "Data is uploaded" << endl;
-                
                 break;
             }
 

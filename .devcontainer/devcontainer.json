@@ -16,6 +16,10 @@
   // Це зменшує проблеми з ownership файлів у bind mount.
   "remoteUser": "${localEnv:USER}",
 
+  "remoteEnv": {
+    "DEBUGINFOD_URLS": ""
+  },
+
   // Проєкт монтується у домашню директорію користувача всередині контейнера.
   // Так шляхи виглядають однаково на Linux, macOS і Windows+WSL.
   "workspaceMount": "source=${localWorkspaceFolder},target=${localEnv:HOME}/${localWorkspaceFolderBasename},type=bind",
