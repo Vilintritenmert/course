@@ -1,12 +1,14 @@
 #include "telemetry.hpp"
 
 #include <iostream>
+#include <ostream>
+#include <stdexcept>
 
-int main(int argc, char** argv) {
-    // The executable expects exactly one telemetry log path.
+int main(int argc, char** argv)
+{
+  try {
     if (argc != 2) {
-        std::cerr << "usage: telemetry_check <input_path>\n";
-        return 1;
+      throw std::invalid_argument("usage: telemetry_check <input_path>");
     }
 
     Frame frames[MAX_TELEMETRY_FRAMES];
@@ -16,4 +18,9 @@ int main(int argc, char** argv) {
     print_summary(summary);
 
     return 0;
+  } catch(std::invalid_argument error) {
+    std::cerr << "Bad input: " << error.what() << std::endl;
+    
+    return 1;
+  }
 }

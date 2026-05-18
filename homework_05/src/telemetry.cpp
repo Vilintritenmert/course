@@ -3,6 +3,7 @@
 #include <cstdlib>
 #include <fstream>
 #include <iostream>
+#include <stdexcept>
 
 // Debugging exercise notes:
 // this file intentionally contains four runtime defects.
@@ -88,9 +89,8 @@ double compute_frame_rate_hz(const Frame frames[], int frame_count) {
 
 int read_frames(const char* path, Frame frames[], int max_frames) {
     std::ifstream input{path};
-    if (!input) {
-        std::cerr << "error: failed to open input file: " << path << '\n';
-        return 0;
+    if (!input.is_open()) {
+        throw std::invalid_argument(std::string("error: failed to open input file: ") + path);
     }
 
     int frame_count = 0;
