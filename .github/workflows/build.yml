@@ -56,3 +56,32 @@ jobs:
             cmake --build --preset debug
             cmake --preset aarch64-debug
             cmake --build --preset aarch64-debug
+
+  run_check:
+    # Запускаємо runtime-перевірки лише після успішної збірки.
+    needs: build
+    runs-on: ubuntu-latest
+    continue-on-error: true
+
+    strategy:
+      fail-fast: false
+      matrix:
+        data_file:
+          - homework_04/data/combined.txt
+          - homework_04/data/incorrect.txt
+          - homework_04/data/straight-light.txt
+          - homework_04/data/straight.txt
+          - homework_04/data/turn.txt
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build and run ugv_odometry (${{ matrix.data_file }}) inside dev container
+        uses: devcontainers/ci@v0.3
+        with:
+          push: never
+          runCmd: |
+            cmake --preset debug
+            cmake --build --preset debug
+            ./build/debug/homework_04/ugv_odometry ./${{ matrix.data_file }}
