@@ -14,6 +14,10 @@ int main(int argc, char** argv)
     Frame frames[MAX_TELEMETRY_FRAMES];
     const int frame_count = read_frames(argv[1], frames, MAX_TELEMETRY_FRAMES);
 
+    if (frame_count == 0) {
+      throw std::invalid_argument("error: input file is empty");
+    } 
+
     const Summary summary = summarize(frames, frame_count);
     print_summary(summary);
 
