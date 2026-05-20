@@ -22,8 +22,8 @@ int main(int argc, char** argv)
     print_summary(summary);
 
     return 0;
-  } catch(std::invalid_argument error) {
-    std::cerr << "Bad input: " << error.what() << std::endl;
+  } catch(std::invalid_argument& error) {
+    std::cerr << "Error: " << error.what() << std::endl;
     
     return 1;
   }
