@@ -6,6 +6,7 @@ sudo
 tzdata
 ssh
 git
+vim
 
 # C++ toolchain і language server для редактора.
 gcc
@@ -32,3 +33,11 @@ cmake
 clang-format
 cmake-format
 ninja-build
+
+# VS Code Server runtime dependencies (required to run the remote extension host).
+libgcc-s1
+libicu74
+libc6
+libssl3
+libstdc++6
+zlib1g
