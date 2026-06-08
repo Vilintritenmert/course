@@ -33,6 +33,17 @@
         "panel": "dedicated",
         "clear": true
       }
+    },
+    {
+      "label": "ctest: run tests",
+      "type": "shell",
+      "command": "ctest --test-dir build/debug/homework_06 --output-on-failure",
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "clear": true
+      }
     }
   ]
 }

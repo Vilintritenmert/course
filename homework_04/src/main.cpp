@@ -74,9 +74,9 @@ struct Nrk {
   }
 };
 
-struct EnsureNextParameterExist {};
+struct EnsureNextVariableExist {};
 
-istream& operator>>(istream& is, EnsureNextParameterExist)
+istream& operator>>(istream& is, EnsureNextVariableExist)
 {
   if (is.eof()) {
     throw invalid_argument("Input file is incorrect");
@@ -85,10 +85,10 @@ istream& operator>>(istream& is, EnsureNextParameterExist)
   return is;
 }
 
-istringstream& operator>> (istringstream& iss, EnsureNextParameterExist validateInput);
+istringstream& operator>> (istringstream& iss, EnsureNextVariableExist validateInput);
 istream& operator>>(istream& is, WheelImpulse& impulse)
 {
-  EnsureNextParameterExist validateInput;
+  EnsureNextVariableExist validateInput;
 
   is >> impulse.timestamp >> validateInput 
      >> impulse.fl_ticks >> validateInput 

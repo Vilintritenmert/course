@@ -64,7 +64,10 @@
         "josetr.cmake-language-support-vscode",
         "cheshirekow.cmake-format",
         "ms-vscode.cpptools",
-        "llvm-vs-code-extensions.vscode-clangd"
+        "llvm-vs-code-extensions.vscode-clangd",
+        "xaver.clang-format",
+        "ms-vscode.cpptools-extension-pack",
+        "ms-vscode.cmake-tools"
       ],
       "settings": {
         // clangd читає build/debug/compile_commands.json з debug preset.
