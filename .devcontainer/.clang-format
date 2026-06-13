@@ -119,7 +119,7 @@ PenaltyExcessCharacter: 1000000
 PenaltyReturnTypeOnItsOwnLine: 200
 PointerAlignment: Left
 RawStringFormats:
-  - Language: Cpp
+    - Language: Cpp
     Delimiters:
       - cc
       - CC
@@ -182,4 +182,9 @@ WhitespaceSensitiveMacros:
   - STRINGIZE
   - PP_STRINGIZE
   - BOOST_PP_STRINGIZE
+---
+---
+Language: Json
+IndentWidth: 4
+ColumnLimit: 80
 ---

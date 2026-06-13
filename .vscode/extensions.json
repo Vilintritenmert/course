@@ -4,7 +4,6 @@
   // встановлюється всередині контейнера через .devcontainer/devcontainer.json.
   "recommendations": [
     "ms-vscode-remote.remote-containers",
-    "github.vscode-github-actions",
     "ms-vscode.cpptools",
   ]
 }

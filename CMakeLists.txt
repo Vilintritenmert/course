@@ -12,12 +12,25 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 # clangd читає compile_commands.json і завдяки цьому бачить ті самі include
 # paths, defines і flags, що й реальна CMake-збірка.
-set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+set(DCMAKE_EXPORT_COMPILE_COMMANDS ON)
+
+include(FetchContent)
+include(GoogleTest)
+
+FetchContent_Declare(
+    googletest URL https://github.com/google/googletest/archive/refs/tags/v1.17.0.zip
+    DOWNLOAD_EXTRACT_TIMESTAMP TRUE
+)
+
+FetchContent_MakeAvailable(googletest)
+
 
 # Домашні роботи. По мірі появи додаємо кожну окремим add_subdirectory.
 add_subdirectory(homework_04)
 
 add_subdirectory(homework_05)
+
+add_subdirectory(homework_06)
 
 add_subdirectory(uav) 
 
