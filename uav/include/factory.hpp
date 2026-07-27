@@ -14,7 +14,6 @@ public:
   const char *what() const throw() { return _message.c_str(); }
 };
 
-
 enum class SolverType  { ANALYTICAL };
 enum class ProviderType { JSON };
 enum class LoaderType { FILE }; 
@@ -32,7 +31,7 @@ public:
     void initDefaultData() {
         _configLoader = createLoader(LoaderType::FILE);
         _configLoader->loadConfig(&_options);
-        _timeManagement = new TimeManagement(_configLoader->getConfig()->getArrayTimeStep(), _configLoader->getConfig()->getSimTimeStep()); 
+        _timeManagement = new TimeManagement(_configLoader->getConfig()->getSimTimeStep(), _configLoader->getConfig()->getArrayTimeStep());
     };
 
     IBallisticSolver* createSolver(SolverType type) {
@@ -60,6 +59,10 @@ public:
 
     TimeManagement *getTimeManagement() const {
         return _timeManagement;
+    };
+
+    IConfigLoader *getConfigLoader() const {
+        return _configLoader;
     };
 
     ~Factory() {

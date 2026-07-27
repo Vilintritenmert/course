@@ -5,20 +5,20 @@ const float G = 9.81f;
 
 class IBallisticSolver {
 public:
-  virtual float computeFlightTime(DroneDetails droneDetails) = 0;
-  virtual float computeHorizDist(float t, DroneDetails droneDetails) = 0;
+  virtual float computeFlightTime(DroneDetails* droneDetails) = 0;
+  virtual float computeHorizDist(float t, DroneDetails* droneDetails) = 0;
   virtual bool computeDropPoint(Position tgt, Position drone, float h,
                                 Position &drop) = 0;
 };
 
 class AnalyticalSolver : public IBallisticSolver {
 public:
-  float computeFlightTime(DroneDetails droneDetails) {
-    float zd = droneDetails.getAltitude();
-    float m = droneDetails.getAmmoParams().getMass();
-    float d = droneDetails.getAmmoParams().getDrag();
-    float l = droneDetails.getAmmoParams().getLift();
-    float v = droneDetails.getAttackSpeed();
+  float computeFlightTime(DroneDetails* droneDetails) {
+    float zd = droneDetails->getAltitude();
+    float m = droneDetails->getAmmoParams().getMass();
+    float d = droneDetails->getAmmoParams().getDrag();
+    float l = droneDetails->getAmmoParams().getLift();
+    float v = droneDetails->getAttackSpeed();
 
     float a = d * G * m - 2.0f * d * d * l * v;
     float b = -3.0f * G * m * m + 3.0f * d * l * m * v;
@@ -42,11 +42,11 @@ public:
     return (t > 0.0f) ? t : sqrtf(2.0f * zd / G);
   };
 
-  float computeHorizDist(float t, DroneDetails droneDetails) {
-    float ad = droneDetails.getAmmoParams().getDrag();
-    float as = droneDetails.getAttackSpeed();
-    float am = droneDetails.getAmmoParams().getMass();
-    float l = droneDetails.getAmmoParams().getLift();
+  float computeHorizDist(float t, DroneDetails* droneDetails) {
+    float ad = droneDetails->getAmmoParams().getDrag();
+    float as = droneDetails->getAttackSpeed();
+    float am = droneDetails->getAmmoParams().getMass();
+    float l = droneDetails->getAmmoParams().getLift();
     float l2 = l * l;
     float l4 = l2 * l2;
     float t2 = t * t, t3 = t2 * t, t4 = t3 * t, t5 = t4 * t;

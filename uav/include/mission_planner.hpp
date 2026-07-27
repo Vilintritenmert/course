@@ -1,12 +1,11 @@
 #pragma once
 
 #include <cmath>
-#include <iostream>
-#include <string>
 #include <vector>
 
 #include "ballistic_solver.hpp"
 #include "config_loader.hpp"
+#include "factory.hpp"
 #include "json_helper.hpp"
 #include "target_provider.hpp"
 #include "types.hpp"
@@ -32,23 +31,21 @@ class MissionPlanner {
 private:
   static constexpr int MAX_STEPS = 10000;
 
-  DroneDetails _droneDetails;
+  ConfigLoaderOptions _configLoaderOptions;
+  Factory *_factory;
+  DroneDetails *_droneDetails;
   TimeManagement *_timeManagement;
   ITargetProvider *_targetProvider;
   IBallisticSolver *_ballisticSolver;
   const Config *_config;
-  std::string _dataFolderPath;
+
   std::vector<SimStep> _steps;
   int _totalSteps = 0;
   int _currentTarget = -1;
+  int _step = 0;
 
-  void validateParameters() const {
-    if (_droneDetails.getAttackSpeed() <= 0.0f ||
-        _droneDetails.getAccelPath() <= 0.0f ||
-        _droneDetails.getAltitude() <= 0.0f) {
-      throw std::runtime_error("ERROR: Invalid parameters\n");
-    }
-  }
+  bool _stagingMode = false;
+  float _turnAngleLeft = 0.0f;
 
   void fillOutputJson(json &output) const {
     output["totalSteps"] = _totalSteps;
@@ -57,121 +54,136 @@ private:
     for (int i = 0; i < _totalSteps; ++i) {
       json stepJson;
       stepJson["position"] = {{"x", _steps[i].pos.getX()},
-                               {"y", _steps[i].pos.getY()}};
+                              {"y", _steps[i].pos.getY()}};
       stepJson["direction"] = _steps[i].direction;
       stepJson["state"] = _steps[i].state;
       stepJson["targetIndex"] = _steps[i].targetIdx;
       stepJson["dropPoint"] = {{"x", _steps[i].dropPoint.getX()},
-                                {"y", _steps[i].dropPoint.getY()}};
+                               {"y", _steps[i].dropPoint.getY()}};
       stepJson["aimPoint"] = {{"x", _steps[i].aimPoint.getX()},
-                               {"y", _steps[i].aimPoint.getY()}};
+                              {"y", _steps[i].aimPoint.getY()}};
       stepJson["predictedTarget"] = {{"x", _steps[i].predictedTarget.getX()},
-                                      {"y", _steps[i].predictedTarget.getY()}};
+                                     {"y", _steps[i].predictedTarget.getY()}};
       output["steps"].push_back(stepJson);
     }
   }
 
+  void init() {
+    _factory = new Factory(_configLoaderOptions);
+
+    IConfigLoader *configLoader = _factory->getConfigLoader();
+    _config = configLoader->getConfig();
+    const AmmoConfig *ammoConfig = configLoader->getAmmoConfig();
+
+    _droneDetails = new DroneDetails(_config, ammoConfig);
+
+    _timeManagement = _factory->getTimeManagement();
+    _targetProvider = _factory->createProvider(ProviderType::JSON);
+    _ballisticSolver = _factory->createSolver(SolverType::ANALYTICAL);
+  }
+
 public:
-  MissionPlanner(DroneDetails droneDetails, IBallisticSolver *ballisticSolver,
-                 ITargetProvider *targetProvider, TimeManagement *timeManagement,
-                 const Config *config, const std::string &dataFolderPath)
-      : _droneDetails(droneDetails), _timeManagement(timeManagement),
-        _targetProvider(targetProvider), _ballisticSolver(ballisticSolver),
-        _config(config), _dataFolderPath(dataFolderPath) {}
+  MissionPlanner(ConfigLoaderOptions configLoaderOptions)
+      : _configLoaderOptions(configLoaderOptions) {
+    init();
+  }
 
-  int runSimulation() {
-    validateParameters();
+  ~MissionPlanner() {
+    delete _droneDetails;
+    delete _factory;
+  }
 
-    float accel = _droneDetails.getAttackSpeed() * _droneDetails.getAttackSpeed() /
-                  (2.0f * _droneDetails.getAccelPath());
+  bool hasNext() const { return _step < MAX_STEPS; }
+
+  void changeSolver(SolverType solverType) {
+    _ballisticSolver = _factory->createSolver(solverType);
+  }
+
+  void reset() {
+    _step = 0;
+    _totalSteps = 0;
+    _currentTarget = -1;
+
+    _steps.clear();
+
+    _droneDetails->reset();
+    _timeManagement->reset();
+    _stagingMode = false;
+  }
+
+  void storeSimulation() {
+    json output;
+    fillOutputJson(output);
+    storeJson(_configLoaderOptions.getResultPath(), output);
+  }
+
+  void step() {
+    _turnAngleLeft = (_droneDetails->getState() == TURNING)
+                         ? (_turnAngleLeft / _droneDetails->getAngularSpeed())
+                         : 0.0f;
+
+    int best = _droneDetails->selectTarget(_targetProvider, _currentTarget,
+                                           _turnAngleLeft);
+    if (best == -1) {
+      return;
+    }
+
+    _currentTarget = best;
+    Position predPos = _targetProvider->getTarget(_currentTarget);
     float horizonDistance = _ballisticSolver->computeHorizDist(
         _ballisticSolver->computeFlightTime(_droneDetails), _droneDetails);
 
-    int targetCount = _targetProvider->getTargetCount();
-    std::vector<Position> allDrop(targetCount);
-    std::vector<Position> allPred(targetCount);
+    _steps.resize(_step + 1);
+    _steps[_step].pos = _droneDetails->getPosition();
+    _steps[_step].direction = _droneDetails->getDirection();
+    _steps[_step].state = static_cast<int>(_droneDetails->getState());
+    _steps[_step].targetIdx = _currentTarget;
+    _steps[_step].dropPoint = _targetProvider->getTarget(_currentTarget);
+    _steps[_step].predictedTarget = predPos;
 
-    Position dronePos = _droneDetails.getPosition();
-    float droneDir = _droneDetails.getDirection();
-    float droneSpeed = 0.0f;
-    DroneState droneState = STOPPED;
-    float turnAngleLeft = 0.0f;
-    int step = 0;
-    bool stagingMode = false;
+    _steps[_step].aimPoint = _droneDetails->getPosition() +
+                             Position{cosf(_droneDetails->getDirection()),
+                                      sinf(_droneDetails->getDirection())} *
+                                 horizonDistance;
 
-    while (step < MAX_STEPS) {
-      float turnTimeLeft = (droneState == TURNING)
-                               ? (turnAngleLeft / _droneDetails.getAngularSpeed())
-                               : 0.0f;
+    DEBUG("Step " << step << " pos=(" << _droneDetails->getPosition().getX()
+                  << "," << _droneDetails->getPosition().getY()
+                  << ") target=" << _currentTarget
+                  << " state=" << static_cast<int>(_droneDetails->getState()));
 
-      int best = _droneDetails.selectTarget(
-          _targetProvider, _timeManagement, _config->getAltitude(), targetCount,
-          _currentTarget, turnTimeLeft, allDrop.data(), allPred.data());
-      if (best == -1) {
-        break;
-      }
+    float distToPred =
+        Position::distance(predPos - _droneDetails->getPosition());
 
-      _currentTarget = best;
-      Position predPos = allPred[_currentTarget];
-
-      _steps.resize(step + 1);
-      _steps[step].pos = dronePos;
-      _steps[step].direction = droneDir;
-      _steps[step].state = static_cast<int>(droneState);
-      _steps[step].targetIdx = _currentTarget;
-      _steps[step].dropPoint = allDrop[_currentTarget];
-      _steps[step].predictedTarget = predPos;
-      _steps[step].aimPoint =
-          dronePos + Position{cosf(droneDir), sinf(droneDir)} * horizonDistance;
-
-      DEBUG("Step " << step << " pos=(" << dronePos.getX() << ","
-                     << dronePos.getY() << ") target=" << _currentTarget
-                     << " state=" << static_cast<int>(droneState));
-
-      float distToPred = Position::distance(predPos - dronePos);
-
-      if (distToPred < horizonDistance) {
-        stagingMode = true;
-      } else if (distToPred >= horizonDistance + _config->getAccelPath()) {
-        stagingMode = false;
-      }
-
-      if (!stagingMode && droneState == MOVING &&
-          distToPred <= horizonDistance + _config->getHitRadius()) {
-        ++step;
-        break;
-      }
-
-      Position navPos;
-      if (stagingMode && distToPred > 1e-3f) {
-        navPos = predPos + Position::normalize(dronePos - predPos) *
-                               (horizonDistance + _config->getAccelPath());
-      } else {
-        navPos = predPos;
-      }
-
-      float desiredDir = atan2f(navPos.getY() - dronePos.getY(),
-                                navPos.getX() - dronePos.getX());
-      _droneDetails.updateDrone(dronePos, droneDir, droneSpeed, droneState,
-                                desiredDir, _config->getSimTimeStep(),
-                                _config->getAttackSpeed(), accel,
-                                _config->getAngularSpeed(),
-                                _config->getTurnThreshold(), turnAngleLeft);
-
-      _timeManagement->tick();
-      ++step;
+    if (distToPred < horizonDistance) {
+      _stagingMode = true;
+    } else if (distToPred >=
+               horizonDistance + _droneDetails->getConfig()->getAccelPath()) {
+      _stagingMode = false;
     }
 
-    _totalSteps = step;
-    LOG("Simulation complete. Steps: " << _totalSteps
-                                       << " Target: " << _currentTarget);
-    storeSimulation(_dataFolderPath + "/simulation.json");
-    return 0;
-  }
+    if (!_stagingMode && _droneDetails->getState() == MOVING &&
+        distToPred <= horizonDistance + _config->getHitRadius()) {
+      ++_step;
+      return;
+    }
 
-  void storeSimulation(const std::string &filename) {
-    json output;
-    fillOutputJson(output);
-    storeJson(filename, output);
+    Position navPos;
+    if (_stagingMode && distToPred > 1e-3f) {
+      navPos = predPos +
+               Position::normalize(_droneDetails->getPosition() - predPos) *
+                   (horizonDistance + _config->getAccelPath());
+    } else {
+      navPos = predPos;
+    }
+
+    float desiredDir =
+        atan2f(navPos.getY() - _droneDetails->getPosition().getY(),
+               navPos.getX() - _droneDetails->getPosition().getX());
+
+    _droneDetails->updateDrone(desiredDir, _turnAngleLeft);
+
+    _timeManagement->tick();
+    ++_step;
+    _totalSteps = _step;
   }
 };

@@ -77,11 +77,10 @@
       ]
     },
     {
-      // Локальний debug стартера ДЗ 5. preLaunchTask збирає debug preset.
-      "name": "Debug uav: uav_calculator",
+      "name": "Debug uav: uav_checker",
       "type": "cppdbg",
       "request": "launch",
-      "program": "${workspaceFolder}/build/debug/uav/uav_calculator",
+      "program": "${workspaceFolder}/build/debug/uav/uav_checker",
       "args": [
         "${workspaceFolder}/uav/data"
       ],

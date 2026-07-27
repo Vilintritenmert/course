@@ -7,9 +7,10 @@ using json = nlohmann::json;
 
 ConfigLoaderOptions::ConfigLoaderOptions(std::string mainConfig,
                                          std::string ammoConfig,
-                                         std::string targetConfig)
+                                         std::string targetConfig,
+                                         std::string resultPath)
     : _config(mainConfig), _ammoParams(ammoConfig),
-      _targetConfig(targetConfig) {}
+      _targetConfig(targetConfig), _resultPath(resultPath) {}
 
 json JsonConfigLoader::loadFile(const std::string &path) const {
   try {

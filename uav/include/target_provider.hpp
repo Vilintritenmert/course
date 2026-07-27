@@ -46,10 +46,11 @@ public:
   int getTargetCount() override { return _targets.size(); }
 
   Position getTarget(int index) override {
+    const int sampleCount = static_cast<int>(_targets[index].size());
     int rawIdx = (int)floorf(_timeManagement->getCurrentTime() /
                              _timeManagement->getArrayTimeStep());
-    int idx = rawIdx % _timeManagement->getTimeStep();
-    int next = (idx + 1) % _timeManagement->getTimeStep();
+    int idx = ((rawIdx % sampleCount) + sampleCount) % sampleCount;
+    int next = (idx + 1) % sampleCount;
     float frac = (_timeManagement->getCurrentTime() -
                   rawIdx * _timeManagement->getArrayTimeStep()) /
                  _timeManagement->getArrayTimeStep();
@@ -57,7 +58,7 @@ public:
     return _targets[index][idx] +
            (_targets[index][next] - _targets[index][idx]) * frac;
 
-  } 
+  }
 
   ~JSONTargetProvider() = default;
 };

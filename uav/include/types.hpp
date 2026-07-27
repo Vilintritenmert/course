@@ -1,11 +1,14 @@
 #pragma once
+
 #include <cfloat>
 #include <cmath>
+#include <stdexcept>
 #include <string>
-#include <algorithm>
 
 class TimeManagement;
 class ITargetProvider;
+class Config;
+class AmmoConfig;
 
 inline float normalizeAngle(float a) {
   while (a > (float)M_PI)
@@ -62,14 +65,14 @@ public:
 
 class AmmoParams {
 private:
-  std::string  _name;
+  std::string _name;
   float _mass = 0, _drag = 0, _lift = 0;
 
 public:
   AmmoParams(std::string name, float mass, float drag, float lift)
       : _name(name), _mass(mass), _drag(drag), _lift(lift) {}
 
-  std::string getName() const { return _name; }  ;
+  std::string getName() const { return _name; };
 
   float getMass() const { return _mass; };
   float getDrag() const { return _drag; };
@@ -80,6 +83,9 @@ public:
 
 class DroneDetails {
 private:
+  const Config *_config;
+  const AmmoConfig *_ammoConfig;
+
   Position _position;
   AmmoParams _ammo;
   float _speed = 0.0f;
@@ -87,16 +93,13 @@ private:
   float _altitude, _direction, _attackSpeed, _angularSpeed, _accelPath;
 
 public:
-  DroneDetails(Position position, AmmoParams ammo, float altitude,
-              float direction, float attackSpeed, float angularSpeed,
-              float accelPath)
-      : _position(position), _ammo(ammo), _altitude(altitude),
-        _direction(direction), _attackSpeed(attackSpeed),
-        _angularSpeed(angularSpeed), _accelPath(accelPath) {}
+  DroneDetails(const Config *config, const AmmoConfig *ammoConfigObj);
 
   Position getPosition() const { return _position; };
 
   AmmoParams getAmmo() const { return _ammo; };
+
+  const Config *getConfig() const { return _config; };
 
   float getSpeed() const { return _speed; };
 
@@ -114,38 +117,57 @@ public:
 
   float getAngularSpeed() const { return _angularSpeed; };
 
+  float getSimTimeStep() const;
+
+  float getTurnThreshold() const;
+
   DroneState getState() const { return _state; };
 
   AmmoParams getAmmoParams() const { return _ammo; };
 
-  int selectTarget(ITargetProvider *targetProvider, TimeManagement *timeManager,
-                   float zd, int targetCount, int currentTargetIdx,
-                   float turnTimeLeft, Position outDrop[], Position outPred[]);
+  void setSpeed(float speed) { _speed = speed; };
 
-  void updateDrone(Position &pos, float &dir, float &speed, DroneState &state,
-                   float desiredDir, float dt, float attackSpeed, float accel,
-                   float angularSpeed, float turnThreshold,
-                   float &turnAngleLeft);
+  void setDirection(float direction) {
+    _direction = normalizeAngle(direction);
+  };
+
+  void setState(DroneState state) { _state = state; };
+
+  void setPosition(Position position) { _position = position; };
+
+  int selectTarget(ITargetProvider *targetProvider, int currentTargetIdx,
+                   float turnTimeLeft);
+
+  void updateDrone(float desiredDir, float &turnAngleLeft);
+
+  void reset();
+
+  void validateParameters() const {
+    if (getAttackSpeed() <= 0.0f || getAccelPath() <= 0.0f ||
+        getAltitude() <= 0.0f) {
+      throw std::runtime_error("ERROR: Invalid parameters\n");
+    }
+  }
 
   ~DroneDetails() = default;
 };
 
 class TimeManagement {
-  private:
-    float _simTimeStep, _arrayTimeStep;
-    float _currentTime = 0.0f;
+private:
+  float _simTimeStep, _arrayTimeStep;
+  float _currentTime = 0.0f;
 
-  public:
-    TimeManagement(float simTimeStep, float arrayTimeStep)
-        : _simTimeStep(simTimeStep), _arrayTimeStep(arrayTimeStep) {} 
+public:
+  TimeManagement(float simTimeStep, float arrayTimeStep)
+      : _simTimeStep(simTimeStep), _arrayTimeStep(arrayTimeStep) {}
 
-    float getCurrentTime() { return _currentTime; };
+  float getCurrentTime() { return _currentTime; };
 
-    float getArrayTimeStep() { return _arrayTimeStep; };
-    
-    int getTimeStep() { return _simTimeStep / _arrayTimeStep; };
+  float getArrayTimeStep() { return _arrayTimeStep; };
 
-    void tick() { _currentTime += _simTimeStep; };
+  void tick() { _currentTime += _simTimeStep; };
+
+  void reset() { _currentTime = 0.0f; };
 };
 
 struct SimStep {

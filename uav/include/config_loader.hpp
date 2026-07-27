@@ -2,6 +2,7 @@
 
 #include "types.hpp"
 #include <nlohmann/json.hpp>
+#include <stdexcept>
 #include <string>
 #include <vector>
 
@@ -19,13 +20,15 @@ private:
   std::string _config;
   std::string _ammoParams;
   std::string _targetConfig;
+  std::string _resultPath;
 
 public:
   ConfigLoaderOptions(std::string mainConfig, std::string ammoConfig,
-                      std::string targetConfig);
+                      std::string targetConfig, std::string resultPath);
   std::string getConfigFilePath() const { return _config; };
   std::string getAmmoConfigFilePath() const { return _ammoParams; };
   std::string getTargetConfigFilePath() const { return _targetConfig; };
+  std::string getResultPath() const { return _resultPath; };
 };
 
 class AmmoConfig {
@@ -35,10 +38,10 @@ private:
 public:
   AmmoConfig(std::vector<AmmoParams> ammoParams) : _ammoConfig(ammoParams) {}
 
-  AmmoParams*findAmmo(std::string name) const {
+  AmmoParams *findAmmo(std::string name) const {
     for (const AmmoParams &param : _ammoConfig) {
       if (name == param.getName()) {
-        return const_cast<AmmoParams*>(&param);
+        return const_cast<AmmoParams *>(&param);
       }
     }
 
@@ -62,7 +65,15 @@ public:
         _attackSpeed(attackSpeed), _accelPath(accelPath),
         _arrayTimeStep(arrayTimeStep), _simTimeStep(simTimeStep),
         _hitRadius(hitRadius), _angularSpeed(angularSpeed),
-        _turnThreshold(turnThreshold), _ammoName(ammoName) {}
+        _turnThreshold(turnThreshold), _ammoName(ammoName) {
+    validateParameters();
+  }
+
+  void validateParameters() const {
+    if (_simTimeStep <= 0.0f || _arrayTimeStep <= 0.0f) {
+      throw std::runtime_error("ERROR: Invalid parameters\n");
+    }
+  }
 
   Position getStartPos() const { return _startPos; }
   float getAltitude() const { return _altitude; }

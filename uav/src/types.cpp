@@ -1,25 +1,37 @@
 #include "types.hpp"
+#include "config_loader.hpp"
+#include "target_provider.hpp"
 #include <algorithm>
 #include <cfloat>
 #include <cmath>
-#include "target_provider.hpp"
+
+DroneDetails::DroneDetails(const Config *config,
+                           const AmmoConfig *ammoConfigObj)
+    : _config(config), _ammoConfig(ammoConfigObj),
+      _position(config->getStartPos()),
+      _ammo(*ammoConfigObj->findAmmo(config->getAmmoName())),
+      _altitude(config->getAltitude()), _direction(config->getInitialDir()),
+      _attackSpeed(config->getAttackSpeed()),
+      _angularSpeed(config->getAngularSpeed()),
+      _accelPath(config->getAccelPath()) {
+  validateParameters();
+}
+
+void DroneDetails::reset() {
+  _position = _config->getStartPos();
+  _direction = _config->getInitialDir();
+  _speed = 0.0f;
+  _state = STOPPED;
+}
 
 int DroneDetails::selectTarget(ITargetProvider *targetProvider,
-                               TimeManagement *timeManager, float zd,
-                               int targetCount, int currentTargetIdx,
-                               float turnTimeLeft, Position outDrop[],
-                               Position outPred[]) {
-  (void)timeManager;
-  (void)zd;
-
+                               int currentTargetIdx, float turnTimeLeft) {
   float timeToStop = 0.0f;
-  switch (_state) {
-  case ACCELERATING:
-    timeToStop = _speed / getAcceleration();
-    break;
+  switch (getState()) {
   case MOVING:
     timeToStop = _attackSpeed / getAcceleration();
     break;
+  case ACCELERATING:
   case DECELERATING:
     timeToStop = _speed / getAcceleration();
     break;
@@ -32,15 +44,11 @@ int DroneDetails::selectTarget(ITargetProvider *targetProvider,
 
   int best = -1;
   float bestTime = FLT_MAX;
-  for (int i = 0; i < targetCount; ++i) {
+
+  for (int i = 0; i < targetProvider->getTargetCount(); ++i) {
     Position targetPos = targetProvider->getTarget(i);
-    Position dPos = targetPos;
-    Position pPos = targetPos;
     float tTime = Position::distance(targetPos - _position) /
                   std::max(_attackSpeed, 1.0e-6f);
-
-    outDrop[i] = dPos;
-    outPred[i] = pPos;
 
     float effective = tTime + (i != currentTargetIdx ? timeToStop : 0.0f);
     if (effective < bestTime) {
@@ -52,83 +60,83 @@ int DroneDetails::selectTarget(ITargetProvider *targetProvider,
   return best;
 }
 
-void DroneDetails::updateDrone(Position &pos, float &dir, float &speed,
-                               DroneState &state, float desiredDir, float dt,
-                               float attackSpeed, float accel,
-                               float angularSpeed, float turnThreshold,
-                               float &turnAngleLeft) {
-  float angleDiff = normalizeAngle(desiredDir - dir);
-  float angStep = angularSpeed * dt;
+void DroneDetails::updateDrone(float desiredDir, float &turnAngleLeft) {
+  float angleDiff = normalizeAngle(desiredDir - getDirection());
+  float angStep = getAngularSpeed() * getConfig()->getSimTimeStep();
 
-  switch (state) {
+  switch (getState()) {
   case STOPPED:
-    speed = 0.0f;
-    if (fabsf(angleDiff) > turnThreshold) {
-      state = TURNING;
+    setSpeed(0.0f);
+    if (fabsf(angleDiff) > getConfig()->getTurnThreshold()) {
+      setState(TURNING);
       turnAngleLeft = fabsf(angleDiff);
     } else {
-      state = ACCELERATING;
+      setState(ACCELERATING);
     }
     break;
 
   case ACCELERATING:
-    if (fabsf(angleDiff) > turnThreshold) {
-      state = DECELERATING;
+    if (fabsf(angleDiff) > getConfig()->getTurnThreshold()) {
+      setState(DECELERATING);
     } else {
-      dir += (fabsf(angleDiff) <= angStep)
-                 ? angleDiff
-                 : (angleDiff > 0 ? angStep : -angStep);
-      dir = normalizeAngle(dir);
-      speed += accel * dt;
-      if (speed >= attackSpeed) {
-        speed = attackSpeed;
-        state = MOVING;
+      setDirection(getDirection() +
+                   (fabsf(angleDiff) <= angStep
+                        ? angleDiff
+                        : (angleDiff > 0 ? angStep : -angStep)));
+      setSpeed(getSpeed() + getAcceleration() * getConfig()->getSimTimeStep());
+      if (getSpeed() >= getAttackSpeed()) {
+        setSpeed(getAttackSpeed());
+        setState(MOVING);
       }
     }
-    pos = pos + Position{cosf(dir), sinf(dir)} * (speed * dt);
+    setPosition(getPosition() +
+                Position{cosf(getDirection()), sinf(getDirection())} *
+                    (getSpeed() * getConfig()->getSimTimeStep()));
     break;
 
   case MOVING:
-    if (fabsf(angleDiff) > turnThreshold) {
-      state = DECELERATING;
+    if (fabsf(angleDiff) > getConfig()->getTurnThreshold()) {
+      setState(DECELERATING);
     } else {
-      dir += (fabsf(angleDiff) <= angStep)
-                 ? angleDiff
-                 : (angleDiff > 0 ? angStep : -angStep);
-      dir = normalizeAngle(dir);
+      setDirection(getDirection() +
+                   (fabsf(angleDiff) <= angStep
+                        ? angleDiff
+                        : (angleDiff > 0 ? angStep : -angStep)));
+      setSpeed(getSpeed() + getAcceleration() * getConfig()->getSimTimeStep());
+      if (getSpeed() >= getAttackSpeed()) {
+        setSpeed(getAttackSpeed());
+        setState(MOVING);
+      }
     }
-    pos = pos + Position{cosf(dir), sinf(dir)} * (speed * dt);
+    setPosition(getPosition() +
+                Position{cosf(getDirection()), sinf(getDirection())} *
+                    (getSpeed() * getConfig()->getSimTimeStep()));
     break;
 
   case DECELERATING:
-    speed -= accel * dt;
-    if (speed <= 0.0f) {
-      speed = 0.0f;
-      state = TURNING;
+    setSpeed(getSpeed() - getAcceleration() * getConfig()->getSimTimeStep());
+    if (getSpeed() <= 0.0f) {
+      setSpeed(0.0f);
+      setState(TURNING);
       turnAngleLeft = fabsf(angleDiff);
     } else {
-      pos = pos + Position{cosf(dir), sinf(dir)} * (speed * dt);
+      setPosition(getPosition() +
+                  Position{cosf(getDirection()), sinf(getDirection())} *
+                      (getSpeed() * getConfig()->getSimTimeStep()));
     }
     break;
 
   case TURNING:
     if (fabsf(angleDiff) <= angStep) {
-      dir = desiredDir;
-      state = ACCELERATING;
+      setDirection(desiredDir);
+      setState(ACCELERATING);
       turnAngleLeft = 0.0f;
     } else {
-      dir += (angleDiff > 0 ? angStep : -angStep);
-      dir = normalizeAngle(dir);
+      setDirection(getDirection() + (angleDiff > 0 ? angStep : -angStep));
       turnAngleLeft = fabsf(angleDiff) - angStep;
       if (turnAngleLeft < 0.0f)
         turnAngleLeft = 0.0f;
     }
     break;
   }
-
-  _position = pos;
-  _direction = dir;
-  _speed = speed;
-  _state = state;
 }
-
