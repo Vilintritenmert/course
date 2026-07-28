@@ -1,35 +1,10 @@
 #pragma once
 
-#include "types.hpp"
-#include <nlohmann/json.hpp>
 #include <stdexcept>
-#include <string>
 #include <vector>
 
-class ConfigLoaderException : public std::exception {
-private:
-  std::string _message;
-
-public:
-  ConfigLoaderException(const std::string &message) : _message(message) {}
-  const char *what() const throw() { return _message.c_str(); }
-};
-
-class ConfigLoaderOptions {
-private:
-  std::string _config;
-  std::string _ammoParams;
-  std::string _targetConfig;
-  std::string _resultPath;
-
-public:
-  ConfigLoaderOptions(std::string mainConfig, std::string ammoConfig,
-                      std::string targetConfig, std::string resultPath);
-  std::string getConfigFilePath() const { return _config; };
-  std::string getAmmoConfigFilePath() const { return _ammoParams; };
-  std::string getTargetConfigFilePath() const { return _targetConfig; };
-  std::string getResultPath() const { return _resultPath; };
-};
+#include "Position.hpp"
+#include "AmmoParams.hpp"
 
 class AmmoConfig {
 private:
@@ -88,25 +63,35 @@ public:
   float getTurnThreshold() const { return _turnThreshold; }
 };
 
+class ConfigLoaderException : public std::exception {
+private:
+  std::string _message;
+
+public:
+  ConfigLoaderException(const std::string &message) : _message(message) {}
+  const char *what() const throw() { return _message.c_str(); }
+};
+
+class ConfigLoaderOptions {
+private:
+  std::string _config;
+  std::string _ammoParams;
+  std::string _targetConfig;
+  std::string _resultPath;
+
+public:
+  ConfigLoaderOptions(std::string mainConfig, std::string ammoConfig,
+                      std::string targetConfig, std::string resultPath);
+  std::string getConfigFilePath() const { return _config; };
+  std::string getAmmoConfigFilePath() const { return _ammoParams; };
+  std::string getTargetConfigFilePath() const { return _targetConfig; };
+  std::string getResultPath() const { return _resultPath; };
+};
+
 class IConfigLoader {
 public:
   virtual void loadConfig(const ConfigLoaderOptions *configLoaderOptions) = 0;
   virtual Config *getConfig() const = 0;
   virtual AmmoConfig *getAmmoConfig() const = 0;
   virtual ~IConfigLoader() = default;
-};
-
-class JsonConfigLoader : public IConfigLoader {
-private:
-  AmmoConfig *_ammoConfig;
-  Config *_mainConfig;
-
-  nlohmann::json loadFile(const std::string &path) const;
-  void loadAmmoConfig(const std::string &path);
-  void loadDronConfig(const std::string &path);
-
-public:
-  void loadConfig(const ConfigLoaderOptions *configLoaderOptions) override;
-  Config *getConfig() const override;
-  AmmoConfig *getAmmoConfig() const override;
 };
