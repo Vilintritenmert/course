@@ -155,6 +155,17 @@ Template. Копія через "Use this template" - це новий репо �
 3. Комітити і пушити у свій репо. CI (якщо налаштований у вашому репо)
    перевірить що все збирається.
 
+## Running
+
+Проєкт містить `Makefile` з такими командами:
+
+- `compile` - збирає весь репо: `cmake --preset debug && cmake --build --preset debug`.
+- `test` - запускає тести: `ctest --test-dir build/debug/homework_06 --output-on-failure`.
+- `clean` - видаляє директорію білду: `rm -rf build`.
+- `format` - перевіряє форматування застейджених змін: `git-clang-format --diff --staged -q`.
+- `quality` - запускає `clang-tidy` на директорію/весь проєкт: `run-clang-tidy -p build/debug ${FOLDER}`.
+- `quality-file` - запускає `clang-tidy` на конкретний файл: `clang-tidy -p build/debug ${FILE}`.
+
 ## Що робить CI
 
 Workflow `.github/workflows/build.yml` запускається на кожен PR (і на push у
@@ -170,3 +181,5 @@ main). Він:
 Якщо CI червоний локально зібралося, але на CI ні - швидше за все
 devcontainer треба rebuild локально (Dev Containers: Rebuild Container),
 щоб підхопити свіжі версії тулів.
+
+

@@ -21,12 +21,26 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 add_executable(uav_checker src/main.cpp)
 add_library(ballistics_lib 
-    src/config_loader.cpp
-    src/json_helper.cpp
-    src/types.cpp
+    src/config/ComponentFactory.cpp
+    src/config/FileConfigLoader.cpp
+    src/providers/JsonTargetProvider.cpp
+    src/solvers/AnalyticalSolver.cpp
+    src/MissionProcessor.cpp
+    src/Helper.cpp
+    src/types/Drone.cpp
+    src/types/Position.cpp
+    src/types/AmmoParams.cpp
+    src/types/TimeManagement.cpp
 )
 
-target_include_directories(ballistics_lib PUBLIC include)
+target_include_directories(ballistics_lib PUBLIC
+    include
+    include/interfaces
+    include/config
+    include/providers
+    include/solvers
+    include/types
+)
 
 target_link_libraries(uav_checker PRIVATE ballistics_lib)
 target_link_libraries(uav_checker PRIVATE nlohmann_json::nlohmann_json)

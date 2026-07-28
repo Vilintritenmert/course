@@ -27,9 +27,13 @@
 
   // SSH ключі потрібні для git operations. bash_history винесено на host,
   // щоб історія команд переживала rebuild контейнера.
+  // ~/.claude.json і ~/.claude монтуються з host, щоб Claude Code не просив
+  // повторну авторизацію після кожного rebuild контейнера.
   "mounts": [
     "source=${localEnv:HOME}/.ssh,target=/home/${localEnv:USER}/.ssh,type=bind,readonly,consistency=cached",
-    "source=${localEnv:HOME}/.devcontainers/${localWorkspaceFolderBasename}/.bash_history,target=/home/${localEnv:USER}/.bash_history,type=bind,consistency=delegated"
+    "source=${localEnv:HOME}/.devcontainers/${localWorkspaceFolderBasename}/.bash_history,target=/home/${localEnv:USER}/.bash_history,type=bind,consistency=delegated",
+    "source=${localEnv:HOME}/.claude.json,target=/home/${localEnv:USER}/.claude.json,type=bind,consistency=cached",
+    "source=${localEnv:HOME}/.claude,target=/home/${localEnv:USER}/.claude,type=bind,consistency=cached"
   ],
 
   // initialize створює host-side директорії для mounts до старту container-а.

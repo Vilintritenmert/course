@@ -1,8 +1,8 @@
 #include <iostream>
 #include <string>
 
-#include "config_loader.hpp"
-#include "mission_planner.hpp"
+#include "IConfigLoader.hpp"
+#include "MissionProcessor.hpp"
 
 int main(int argc, char **argv) {
   try {
@@ -17,13 +17,13 @@ int main(int argc, char **argv) {
         dataFolderName + std::string("/targets.json"),
         dataFolderName + std::string("/simulation.json")};
 
-    MissionPlanner planner(configLoaderOptions);
+    MissionProcessor processor(configLoaderOptions);
 
-    while (planner.hasNext()) {
-      planner.step();
+    while (processor.hasNext()) {
+      processor.step();
     }
 
-    planner.storeSimulation();
+    processor.storeSimulation();
   } catch (const std::exception &e) {
     std::cerr << "ERROR: " << e.what() << "\n";
     return 1;
