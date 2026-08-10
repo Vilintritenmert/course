@@ -2,12 +2,12 @@
 
 #include "AnalyticalSolver.hpp"
 
-float AnalyticalSolver::computeFlightTime(DroneDetails *droneDetails) {
-  float zd = droneDetails->getAltitude();
+float AnalyticalSolver::computeFlightTime(std::shared_ptr<DroneContext> droneDetails) {
+  float zd = droneDetails->getConfig()->getAltitude();
   float m = droneDetails->getAmmoParams().getMass();
   float d = droneDetails->getAmmoParams().getDrag();
   float l = droneDetails->getAmmoParams().getLift();
-  float v = droneDetails->getAttackSpeed();
+  float v = droneDetails->getConfig()->getAttackSpeed();
 
   float a = d * G * m - 2.0f * d * d * l * v;
   float b = -3.0f * G * m * m + 3.0f * d * l * m * v;
@@ -31,9 +31,9 @@ float AnalyticalSolver::computeFlightTime(DroneDetails *droneDetails) {
   return (t > 0.0f) ? t : sqrtf(2.0f * zd / G);
 };
 
-float AnalyticalSolver::computeHorizDist(float t, DroneDetails *droneDetails) {
+float AnalyticalSolver::computeHorizDist(float t, std::shared_ptr<DroneContext> droneDetails) {
   float ad = droneDetails->getAmmoParams().getDrag();
-  float as = droneDetails->getAttackSpeed();
+  float as = droneDetails->getConfig()->getAttackSpeed();
   float am = droneDetails->getAmmoParams().getMass();
   float l = droneDetails->getAmmoParams().getLift();
   float l2 = l * l;

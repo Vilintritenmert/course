@@ -1,5 +1,6 @@
 #pragma once
 
+#include <memory>
 #include <string>
 
 #include "TimeManagement.hpp"
@@ -16,29 +17,29 @@ public:
   const char *what() const throw() { return _message.c_str(); }
 };
 
-enum class SolverType { ANALYTICAL };
+enum class SolverType { ANALYTICAL, TABLE };
 enum class ProviderType { JSON };
 enum class LoaderType { FILE };
 
 class ComponentFactory {
-  ConfigLoaderOptions _options;
-  TimeManagement *_timeManagement;
-  IConfigLoader *_configLoader;
+  std::shared_ptr<ConfigLoaderOptions> _options;
+  std::shared_ptr<TimeManagement> _timeManagement;
+  std::shared_ptr<IConfigLoader> _configLoader;
 
 public:
-  ComponentFactory(ConfigLoaderOptions options);
+  ComponentFactory(std::shared_ptr<ConfigLoaderOptions> options);
 
   void initDefaultData();
 
-  IBallisticSolver *createSolver(SolverType type);
+  std::unique_ptr<IBallisticSolver> createSolver(SolverType type);
 
-  ITargetProvider *createProvider(ProviderType type);
+  std::unique_ptr<ITargetProvider> createProvider(ProviderType type);
 
-  IConfigLoader *createLoader(LoaderType type);
+  std::unique_ptr<IConfigLoader> createLoader(LoaderType type);
 
-  TimeManagement *getTimeManagement() const;
+  std::shared_ptr<TimeManagement> getTimeManagement() const;
 
-  IConfigLoader *getConfigLoader() const;
+  std::shared_ptr<IConfigLoader> getConfigLoader() const;
 
-  ~ComponentFactory();
+  ~ComponentFactory() = default ;
 };

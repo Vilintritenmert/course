@@ -1,6 +1,8 @@
 #pragma once
 
+#include <memory>
 #include <stdexcept>
+#include <string>
 #include <vector>
 
 #include "Position.hpp"
@@ -61,6 +63,7 @@ public:
   float getHitRadius() const { return _hitRadius; }
   float getAngularSpeed() const { return _angularSpeed; }
   float getTurnThreshold() const { return _turnThreshold; }
+  float getAngelStep() const { return getAngularSpeed() * getSimTimeStep();}
 };
 
 class ConfigLoaderException : public std::exception {
@@ -77,21 +80,24 @@ private:
   std::string _config;
   std::string _ammoParams;
   std::string _targetConfig;
+  std::string _ballistikTable;
   std::string _resultPath;
 
 public:
   ConfigLoaderOptions(std::string mainConfig, std::string ammoConfig,
-                      std::string targetConfig, std::string resultPath);
+                      std::string targetConfig, std::string resultPath,
+                      std::string ballistikTable = "");
   std::string getConfigFilePath() const { return _config; };
   std::string getAmmoConfigFilePath() const { return _ammoParams; };
   std::string getTargetConfigFilePath() const { return _targetConfig; };
+  std::string getBallistikTable() const { return _ballistikTable; };
   std::string getResultPath() const { return _resultPath; };
 };
 
 class IConfigLoader {
 public:
-  virtual void loadConfig(const ConfigLoaderOptions *configLoaderOptions) = 0;
-  virtual Config *getConfig() const = 0;
-  virtual AmmoConfig *getAmmoConfig() const = 0;
+  virtual void loadConfig(const std::shared_ptr<ConfigLoaderOptions> configLoaderOptions) = 0;
+  virtual std::shared_ptr<Config> getConfig() const = 0;
+  virtual std::shared_ptr<AmmoConfig> getAmmoConfig() const = 0;
   virtual ~IConfigLoader() = default;
 };
