@@ -2,54 +2,53 @@
 #include "AnalyticalSolver.hpp"
 #include "FileConfigLoader.hpp"
 #include "JsonTargetProvider.hpp"
+#include "TableSolver.hpp"
+#include <memory>
 
-ComponentFactory::ComponentFactory(ConfigLoaderOptions options)
+ComponentFactory::ComponentFactory(std::shared_ptr<ConfigLoaderOptions> options)
     : _options(options) {
   initDefaultData();
 };
 
 void ComponentFactory::initDefaultData() {
   _configLoader = createLoader(LoaderType::FILE);
-  _configLoader->loadConfig(&_options);
-  _timeManagement =
-      new TimeManagement(_configLoader->getConfig()->getSimTimeStep(),
+  _configLoader->loadConfig(_options);
+  _timeManagement = std::make_unique<TimeManagement>(_configLoader->getConfig()->getSimTimeStep(),
                          _configLoader->getConfig()->getArrayTimeStep());
 };
 
-IBallisticSolver *ComponentFactory::createSolver(SolverType type) {
+std::unique_ptr<IBallisticSolver> ComponentFactory::createSolver(SolverType type) {
   if (type == SolverType::ANALYTICAL) {
-    return new AnalyticalSolver();
+    return std::make_unique<AnalyticalSolver>();
+  } 
+  if (type == SolverType::TABLE) {
+    return std::make_unique<TableSolver>(_options->getBallistikTable());
   }
 
   throw FactoryLoaderException("Unknown solver type");
 };
 
-ITargetProvider *ComponentFactory::createProvider(ProviderType type) {
+std::unique_ptr<ITargetProvider> ComponentFactory::createProvider(ProviderType type) {
   if (type == ProviderType::JSON) {
-    return new JSONTargetProvider(_timeManagement,
-                                  _options.getTargetConfigFilePath());
+    return std::make_unique<JSONTargetProvider>(_timeManagement,
+                                  _options->getTargetConfigFilePath());
   }
 
   throw FactoryLoaderException("Unknown provider type");
 };
 
-IConfigLoader *ComponentFactory::createLoader(LoaderType type) {
+std::unique_ptr<IConfigLoader> ComponentFactory::createLoader(LoaderType type) {
   if (type == LoaderType::FILE) {
-    return new JsonConfigLoader();
+    return std::make_unique<JsonConfigLoader>();
   }
 
   throw FactoryLoaderException("Unknown loader type");
 };
 
-TimeManagement *ComponentFactory::getTimeManagement() const {
+std::shared_ptr<TimeManagement> ComponentFactory::getTimeManagement() const {
   return _timeManagement;
 };
 
-IConfigLoader *ComponentFactory::getConfigLoader() const {
+std::shared_ptr<IConfigLoader> ComponentFactory::getConfigLoader() const {
   return _configLoader;
-};
-
-ComponentFactory::~ComponentFactory() {
-  delete _timeManagement;
-  delete _configLoader;
 };

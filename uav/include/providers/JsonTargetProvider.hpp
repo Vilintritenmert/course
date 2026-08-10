@@ -11,13 +11,13 @@ using json = nlohmann::json;
 
 class JSONTargetProvider : public ITargetProvider {
 private:
-  TimeManagement *_timeManagement;
+  std::shared_ptr<TimeManagement> _timeManagement;
   std::vector<std::vector<Position>> _targets;
 
   void initJsonTargets(const std::string jsonFilePath);
 
 public:
-  JSONTargetProvider(TimeManagement *timeManagement,
+  JSONTargetProvider(std::shared_ptr<TimeManagement> timeManagement,
                      const std::string &jsonFilePath);
 
   Position getTarget(int index) override;

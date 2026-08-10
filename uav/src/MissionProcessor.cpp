@@ -1,14 +1,12 @@
-#include "MissionProcessor.hpp"
-#include "SimStep.hpp"
+#include <memory>
 
-MissionProcessor::MissionProcessor(ConfigLoaderOptions configLoaderOptions)
+#include "MissionProcessor.hpp"
+#include "StateNavigating.hpp"
+
+MissionProcessor::MissionProcessor(
+    std::shared_ptr<ConfigLoaderOptions> configLoaderOptions)
     : _configLoaderOptions(configLoaderOptions) {
   init();
-}
-
-MissionProcessor::~MissionProcessor() {
-  delete _droneDetails;
-  delete _factory;
 }
 
 void MissionProcessor::fillOutputJson(json &output) const {
@@ -33,17 +31,19 @@ void MissionProcessor::fillOutputJson(json &output) const {
 }
 
 void MissionProcessor::init() {
-  _factory = new ComponentFactory(_configLoaderOptions);
+  _factory = std::make_unique<ComponentFactory>(_configLoaderOptions);
 
-  IConfigLoader *configLoader = _factory->getConfigLoader();
+  IConfigLoader *configLoader = _factory->getConfigLoader().get();
   _config = configLoader->getConfig();
-  const AmmoConfig *ammoConfig = configLoader->getAmmoConfig();
+  std::shared_ptr<AmmoConfig> ammoConfig = configLoader->getAmmoConfig();
 
-  _droneDetails = new DroneDetails(_config, ammoConfig);
+  _droneDetails = std::make_shared<DroneContext>(_config, ammoConfig);
 
   _timeManagement = _factory->getTimeManagement();
   _targetProvider = _factory->createProvider(ProviderType::JSON);
   _ballisticSolver = _factory->createSolver(SolverType::ANALYTICAL);
+
+  _state = std::make_unique<StateNavigating>();
 }
 
 bool MissionProcessor::hasNext() const { return _step < MAX_STEPS; }
@@ -61,21 +61,23 @@ void MissionProcessor::reset() {
 
   _droneDetails->reset();
   _timeManagement->reset();
-  _stagingMode = false;
+
+  _state = std::make_unique<StateNavigating>();
 }
 
 void MissionProcessor::storeSimulation() {
   json output;
   fillOutputJson(output);
-  storeJson(_configLoaderOptions.getResultPath(), output);
+  storeJson(_configLoaderOptions->getResultPath(), output);
 }
 
 void MissionProcessor::step() {
-  _turnAngleLeft = (_droneDetails->getState() == TURNING)
-                       ? (_turnAngleLeft / _droneDetails->getAngularSpeed())
-                       : 0.0f;
+  _turnAngleLeft =
+      (_droneDetails->getState() == TURNING)
+          ? (_turnAngleLeft / _droneDetails->getConfig()->getAngularSpeed())
+          : 0.0f;
 
-  int best = _droneDetails->selectTarget(_targetProvider, _currentTarget,
+  int best = _droneDetails->selectTarget(_targetProvider.get(), _currentTarget,
                                          _turnAngleLeft);
   if (best == -1) {
     return;
@@ -99,37 +101,14 @@ void MissionProcessor::step() {
                                     sinf(_droneDetails->getDirection())} *
                                horizonDistance;
 
-  float distToPred = Position::distance(predPos - _droneDetails->getPosition());
+  float distToPrediction =
+      Position::distance(predPos - _droneDetails->getPosition());
 
-  if (distToPred < horizonDistance) {
-    _stagingMode = true;
-  } else if (distToPred >=
-             horizonDistance + _droneDetails->getConfig()->getAccelPath()) {
-    _stagingMode = false;
+  MissionEngagement engagement{predPos, horizonDistance, distToPrediction,
+                               distToPrediction < horizonDistance};
+
+  auto next = _state->execute(*this, engagement);
+  if (next) {
+    _state = std::move(next);
   }
-
-  if (!_stagingMode && _droneDetails->getState() == MOVING &&
-      distToPred <= horizonDistance + _config->getHitRadius()) {
-    ++_step;
-    return;
-  }
-
-  Position navPos;
-  if (_stagingMode && distToPred > 1e-3f) {
-    navPos =
-        predPos + Position::normalize(_droneDetails->getPosition() - predPos) *
-                      (horizonDistance + _config->getAccelPath());
-  } else {
-    navPos = predPos;
-  }
-
-  float desiredDir =
-      atan2f(navPos.getY() - _droneDetails->getPosition().getY(),
-             navPos.getX() - _droneDetails->getPosition().getX());
-
-  _droneDetails->updateDrone(desiredDir, _turnAngleLeft);
-
-  _timeManagement->tick();
-  ++_step;
-  _totalSteps = _step;
 }

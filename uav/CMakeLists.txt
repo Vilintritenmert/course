@@ -25,9 +25,17 @@ add_library(ballistics_lib
     src/config/FileConfigLoader.cpp
     src/providers/JsonTargetProvider.cpp
     src/solvers/AnalyticalSolver.cpp
+    src/solvers/TableSolver.cpp
     src/MissionProcessor.cpp
     src/Helper.cpp
-    src/types/Drone.cpp
+    src/types/drone/DroneContext.cpp
+    src/types/drone/StateStopped.cpp
+    src/types/drone/StateAccelerating.cpp
+    src/types/drone/StateMoving.cpp
+    src/types/drone/StateDecelerating.cpp
+    src/types/drone/StateTurning.cpp
+    src/types/mission/StateNavigating.cpp
+    src/types/mission/StateEngaging.cpp
     src/types/Position.cpp
     src/types/AmmoParams.cpp
     src/types/TimeManagement.cpp
@@ -40,6 +48,8 @@ target_include_directories(ballistics_lib PUBLIC
     include/providers
     include/solvers
     include/types
+    include/types/drone
+    include/types/mission
 )
 
 target_link_libraries(uav_checker PRIVATE ballistics_lib)

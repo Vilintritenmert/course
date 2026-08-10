@@ -2,10 +2,10 @@
 
 #include "Helper.hpp"
 
-JSONTargetProvider::JSONTargetProvider(TimeManagement *timeManagement,
-                     const std::string &jsonFilePath)
-      : _timeManagement(timeManagement) {
-    initJsonTargets(jsonFilePath);
+JSONTargetProvider::JSONTargetProvider(std::shared_ptr<TimeManagement> timeManagement,
+                                       const std::string &jsonFilePath)
+    : _timeManagement(timeManagement) {
+  initJsonTargets(jsonFilePath);
 }
 
 void JSONTargetProvider::initJsonTargets(const std::string jsonFilePath) {

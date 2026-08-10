@@ -1,4 +1,5 @@
 #include <iostream>
+#include <memory>
 #include <string>
 
 #include "IConfigLoader.hpp"
@@ -11,11 +12,12 @@ int main(int argc, char **argv) {
     }
 
     const std::string dataFolderName = argv[1];
-    const ConfigLoaderOptions configLoaderOptions{
+    const std::shared_ptr<ConfigLoaderOptions> configLoaderOptions = std::make_shared<ConfigLoaderOptions>(
         dataFolderName + std::string("/config.json"),
         dataFolderName + std::string("/ammo.json"),
         dataFolderName + std::string("/targets.json"),
-        dataFolderName + std::string("/simulation.json")};
+        dataFolderName + std::string("/simulation.json"),
+        dataFolderName + std::string("/ballistic_table.txt"));
 
     MissionProcessor processor(configLoaderOptions);
 
