@@ -1,0 +1,29 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(rm -rf /tmp/claude-1000/uav_build2)",
+      "Bash(cmake -S uav -B /tmp/claude-1000/uav_build2 -DCMAKE_BUILD_TYPE=Release)",
+      "Bash(cmake --build /tmp/claude-1000/uav_build2 -j4)",
+      "Bash(/tmp/claude-1000/uav_build2/uav /home/vilintritenmert/course/uav/data)",
+      "Bash(git check-ignore *)",
+      "Bash(echo \"status=$?\")",
+      "Bash(mkdir -p /home/vilintritenmert/course/uav/include/uav /home/vilintritenmert/course/uav/src)",
+      "Bash(rm -rf build)",
+      "Bash(cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug)",
+      "Bash(cp data/simulation.json /tmp/simulation_orig.json)",
+      "Bash(python3 -c ' *)",
+      "Bash(rm -rf build && cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug -Wno-dev > /tmp/cmake_out.log 2>&1; tail -30 /tmp/cmake_out.log)",
+      "Bash(rm -f data/*.Identifier \"data/simulation.json\")",
+      "Bash(git checkout *)",
+      "Bash(python3 /tmp/claude-1000/-home-vilintritenmert-course/ad23ff40-fc92-44b6-b456-25b7f3573035/scratchpad/gen_table.py)",
+      "Bash(cmake -S . -B build2 -DCMAKE_BUILD_TYPE=Debug)",
+      "Bash(cmake --build build2 -j4)",
+      "Bash(./build/uav data/nonexistent)"
+    ],
+    "additionalDirectories": [
+      "/tmp/claude-1000/uav_build2",
+      "/home/vilintritenmert/course/uav/include",
+      "/tmp"
+    ]
+  }
+}
