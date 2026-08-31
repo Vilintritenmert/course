@@ -1,4 +1,4 @@
-#include "uav_ai/json_target_provider.hpp"
+#include "json_target_provider.hpp"
 
 #include <cmath>
 #include <fstream>
@@ -49,9 +49,9 @@ auto JsonTargetProvider::interpolate(int targetIdx, float t) const -> Coord {
 
 auto JsonTargetProvider::getTarget(int index) const -> Target {
   Target target;
-  target.position = interpolate(index, currentTime_);
+  target.pos = interpolate(index, currentTime_);
   const Coord next = interpolate(index, currentTime_ + velocityDt_);
-  target.velocity = (next - target.position) / velocityDt_;
+  target.velocity = (next - target.pos) / velocityDt_;
   return target;
 }
 

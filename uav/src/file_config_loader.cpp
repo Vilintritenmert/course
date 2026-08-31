@@ -1,4 +1,4 @@
-#include "uav_ai/file_config_loader.hpp"
+#include "file_config_loader.hpp"
 
 #include <fstream>
 #include <stdexcept>
@@ -39,9 +39,13 @@ void FileConfigLoader::loadConfig(const std::string &filePath) {
   config_.hitRadius = j["simulation"]["hitRadius"];
   config_.arrayTimeStep = j["targetArrayTimeStep"];
 
+  config_.physicsTimeStep = j["simulation"]["physicsTimeStep"];
+  config_.timeScale = j["simulation"]["timeScale"];
+
   if (config_.attackSpeed <= 0.F || config_.accelPath <= 0.F ||
       config_.arrayTimeStep <= 0.F || config_.simTimeStep <= 0.F ||
-      config_.angularSpeed <= 0.F) {
+      config_.angularSpeed <= 0.F || config_.physicsTimeStep <= 0.F ||
+      config_.timeScale <= 0.F) {
     throw std::runtime_error("Error: `" + filePath +
                              "` has invalid (non-positive) parameters");
   }

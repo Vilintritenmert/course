@@ -1,29 +1,32 @@
-#include "uav_ai/mission_processor.hpp"
+#include "mission_processor.hpp"
 
 #include <algorithm>
+#include <chrono>
 #include <cmath>
 #include <fstream>
 #include <limits>
 #include <stdexcept>
+#include <thread>
 
 #include <nlohmann/json.hpp>
 
-#include "uav_ai/drone_state.hpp"
+#include "drone_physics.hpp"
+#include "drone_state.hpp"
 
 using json = nlohmann::json;
 
 namespace uav {
 
 MissionProcessor::MissionProcessor(std::unique_ptr<IConfigLoader> configLoader,
-                                   std::unique_ptr<ITargetProvider> provider,
+                                   ITargetProvider *provider,
+                                   DronePhysics *physics,
                                    std::unique_ptr<IBallisticSolver> solver)
-    : configLoader_(std::move(configLoader)), provider_(std::move(provider)),
-      solver_(std::move(solver)) {}
+    : configLoader_(std::move(configLoader)), provider_(provider),
+      physics_(physics), solver_(std::move(solver)) {}
 
 MissionProcessor::~MissionProcessor() = default;
 
-auto MissionProcessor::init(const std::string &dataDir,
-                            const std::string &targetsPath) -> bool {
+auto MissionProcessor::init(const std::string &dataDir) -> bool {
   initialized_ = false;
 
   if (!configLoader_->load(dataDir)) {
@@ -33,19 +36,12 @@ auto MissionProcessor::init(const std::string &dataDir,
   config_ = configLoader_->getConfig();
   ammo_ = configLoader_->getAmmoParams();
 
-  if (!provider_->load(targetsPath)) {
-    throw std::runtime_error("Error: failed to load targets from `" +
-                             targetsPath + "`");
-  }
-  provider_->setArrayTimeStep(config_.arrayTimeStep);
-  provider_->reset();
-
   if (!solver_->init(ammo_, config_.attackSpeed, config_.altitude,
                      config_.accelPath)) {
     throw std::runtime_error("Error: failed to initialize ballistic solver");
   }
 
-  resetDrone();
+  state_ = std::make_unique<StateStopped>();
   history_.clear();
   currentTime_ = 0.F;
   selectedTarget_ = -1;
@@ -53,14 +49,6 @@ auto MissionProcessor::init(const std::string &dataDir,
   finished_ = false;
   initialized_ = true;
   return true;
-}
-
-void MissionProcessor::resetDrone() {
-  drone_ = Drone();
-  drone_.pos = config_.startPos;
-  drone_.dir = config_.initialDir;
-  drone_.speed = 0.F;
-  state_ = std::make_unique<StateStopped>();
 }
 
 auto MissionProcessor::hasNext() const -> bool {
@@ -78,17 +66,17 @@ void MissionProcessor::step() {
     return;
   }
 
+  const DroneTelemetry telemetry = physics_->getTelemetry();
+
   const float acceleration =
       (config_.attackSpeed * config_.attackSpeed) / (2.F * config_.accelPath);
 
-  DroneContext ctx{drone_.pos,          drone_.dir,     drone_.speed,
-                    drone_.turnGoalDir, drone_.turnRemaining,
-                    drone_.turnSign,    0.F,            acceleration,
-                    config_};
+  DroneContext ctx{telemetry.pos, telemetry.direction,
+                    length(telemetry.speed), 0.F, acceleration, config_, {}};
 
   std::vector<TargetCandidate> candidates(targetCount);
   for (int i = 0; i < targetCount; ++i) {
-    candidates[i] = solver_->solve(drone_.pos, provider_->getTarget(i));
+    candidates[i] = solver_->solve(telemetry.pos, provider_->getTarget(i));
   }
 
   int bestTarget = 0;
@@ -106,38 +94,37 @@ void MissionProcessor::step() {
   selectedTarget_ = bestTarget;
 
   const TargetCandidate &chosen = candidates[selectedTarget_];
-  const float dt = config_.simTimeStep;
 
   ctx.desiredDir = chosen.heading;
   auto next = state_->execute(ctx);
+  physics_->sendCommand(ctx.command);
   if (next) {
     state_ = std::move(next);
   }
 
   SimStep s;
-  s.pos = drone_.pos;
-  s.direction = drone_.dir;
-  s.state = state_->name();
+  s.pos = telemetry.pos;
+  s.direction = telemetry.direction;
+  s.state = droneModeName(telemetry.mode);
   s.targetIdx = selectedTarget_;
   s.dropPoint = chosen.releasePoint;
-  const Coord aimDir = {std::cos(drone_.dir), std::sin(drone_.dir)};
-  s.aimPoint = drone_.pos + aimDir * solver_->getHorizontalDistance();
+  const Coord aimDir = {std::cos(telemetry.direction), std::sin(telemetry.direction)};
+  s.aimPoint = telemetry.pos + aimDir * solver_->getHorizontalDistance();
   s.predictedTarget = chosen.predictedTarget;
+  s.timeSecSinceStart = telemetry.timeSecSinceStart;
   history_.push_back(s);
   ++stepCount_;
 
-  provider_->advance(dt);
-  currentTime_ += dt;
+  currentTime_ += config_.simTimeStep;
 
-  const float distToRelease = length(chosen.releasePoint - drone_.pos);
+  const float distToRelease = length(chosen.releasePoint - telemetry.pos);
   if (distToRelease <= config_.hitRadius || stepCount_ >= MAX_STEPS) {
     finished_ = true;
   }
 }
 
 void MissionProcessor::reset() {
-  resetDrone();
-  provider_->reset();
+  state_ = std::make_unique<StateStopped>();
   history_.clear();
   currentTime_ = 0.F;
   selectedTarget_ = -1;
@@ -148,6 +135,20 @@ void MissionProcessor::reset() {
 void MissionProcessor::changeSolver(std::unique_ptr<IBallisticSolver> solver) {
   solver_ = std::move(solver);
   solver_->init(ammo_, config_.attackSpeed, config_.altitude, config_.accelPath);
+}
+
+void MissionProcessor::run() {
+  ready_.store(true);
+  while (!running_.load() && !stopRequested_.load()) {
+    std::this_thread::sleep_for(std::chrono::milliseconds(1));
+  }
+
+  const float dt = config_.simTimeStep;
+  while (!stopRequested_.load() && hasNext()) {
+    step();
+    std::this_thread::sleep_for(
+        std::chrono::duration<float>(dt / config_.timeScale));
+  }
 }
 
 void MissionProcessor::writeOutput(const std::string &outputPath) const {
@@ -165,6 +166,7 @@ void MissionProcessor::writeOutput(const std::string &outputPath) const {
     step["aimPoint"] = {{"x", s.aimPoint.x}, {"y", s.aimPoint.y}};
     step["predictedTarget"] = {{"x", s.predictedTarget.x},
                                {"y", s.predictedTarget.y}};
+    step["timeSecSinceStart"] = s.timeSecSinceStart;
     out["steps"].push_back(step);
   }
 

@@ -21,17 +21,17 @@
       "Bash(./uav_checker ../data)",
       "Bash(echo \"exit: $?\")",
       "Bash(cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug)",
-      "Bash(cmake --build build --target uav_ai -j4)",
+      "Bash(cmake --build build --target uav -j4)",
       "Bash(exit 0)",
-      "Bash(cmake --build /home/vilintritenmert/course/build --target uav_ai -j4)",
-      "Bash(cmake --build /home/vilintritenmert/course/build/debug --target uav_ai -j4)",
+      "Bash(cmake --build /home/vilintritenmert/course/build --target uav -j4)",
+      "Bash(cmake --build /home/vilintritenmert/course/build/debug --target uav -j4)",
       "Read(//home/vilintritenmert/**)",
       "Bash(find / -name targets.txt)",
-      "Bash(awk '{print NR\": \"NF}' /home/vilintritenmert/course/uav_ai/data/targets.txt)",
+      "Bash(awk '{print NR\": \"NF}' /home/vilintritenmert/course/uav/data/targets.txt)",
       "Bash(rm -rf build)",
       "Read(//tmp/**)",
       "Bash(curl -sL -o json.hpp https://raw.githubusercontent.com/nlohmann/json/v3.11.3/single_include/nlohmann/json.hpp)",
-      "Bash(cmake --build /tmp/claude-1000/uav_ai_build -j4)"
+      "Bash(cmake --build /tmp/claude-1000/uav_build -j4)"
     ]
   }
 }

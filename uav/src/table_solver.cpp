@@ -1,4 +1,4 @@
-#include "uav_ai/table_solver.hpp"
+#include "table_solver.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -7,8 +7,6 @@ namespace uav {
 
 namespace {
 
-// Орієнтовний час прольоту дистанції з розгоном/крейсерською швидкістю
-// (той самий трапецієподібний профіль, що й в AnalyticalSolver).
 auto estimateTravelTime(float distance, float cruiseSpeed, float acceleration,
                         float accelerationPath) -> float {
   if (distance <= 0.F) {
@@ -60,13 +58,13 @@ auto TableSolver::solve(const Coord &dronePos, const Target &target) const
     return candidate;
   }
 
-  const float distNow = length(target.position - dronePos);
+  const float distNow = length(target.pos - dronePos);
   const float roughReleaseDist = std::max(0.F, distNow - horizontalDistance_);
   const float orientTotalTime = estimateTravelTime(
       roughReleaseDist, attackSpeed_, acceleration_, accelPath_);
 
   const Coord predicted =
-      target.position + target.velocity * (orientTotalTime + fallTime_);
+      target.pos + target.velocity * (orientTotalTime + fallTime_);
 
   const Coord delta = predicted - dronePos;
   const float distToPredicted = length(delta);

@@ -1,9 +1,10 @@
-#include "uav_ai/factory.hpp"
+#include "factory.hpp"
 
-#include "uav_ai/analytical_solver.hpp"
-#include "uav_ai/file_config_loader.hpp"
-#include "uav_ai/json_target_provider.hpp"
-#include "uav_ai/table_solver.hpp"
+#include "analytical_solver.hpp"
+#include "file_config_loader.hpp"
+#include "json_target_provider.hpp"
+#include "table_solver.hpp"
+#include "thread_safe_target_provider.hpp"
 
 namespace uav {
 
@@ -23,6 +24,9 @@ auto createProvider(ProviderType type, const std::string &path)
   switch (type) {
   case ProviderType::JSON:
     provider = std::make_unique<JsonTargetProvider>();
+    break;
+  case ProviderType::THREADED:
+    provider = std::make_unique<ThreadSafeTargetProvider>();
     break;
   }
   if (provider != nullptr && !path.empty()) {

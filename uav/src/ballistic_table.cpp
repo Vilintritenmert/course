@@ -1,4 +1,4 @@
-#include "uav_ai/ballistic_table.hpp"
+#include "ballistic_table.hpp"
 
 #include <algorithm>
 #include <fstream>
@@ -7,8 +7,6 @@ namespace uav {
 
 namespace {
 
-// Індекс нижнього вузла і коефіцієнт [0..1] для одного виміру. Значення за
-// межами осі - clamp до крайнього інтервалу (frac 0 або 1).
 struct Interp {
   int lo = 0;
   float frac = 0.F;

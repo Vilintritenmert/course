@@ -71,36 +71,55 @@ struct DroneConfig {
   float hitRadius = 0.F;
   float angularSpeed = 0.F;
   float turnThreshold = 0.F;
+
+  float physicsTimeStep = 0.01F;
+  float timeScale = 10.F;
 };
 
-// Стан дрона під час симуляції (позиція, курс, швидкість). Фаза (STOPPED /
-// ACCELERATING / ...) більше не зберігається тут як enum - нею керує
-// стейт-машина класів IDroneState (див. drone_state.hpp).
-struct Drone {
-  Coord pos;
-  float dir = 0.F;
-  float speed = 0.F;
+enum class DroneMode { Stopped, Accelerating, Decelerating, Turning, Moving };
 
-  // Використовується під час TURNING: куди повертаємось, скільки часу лишилось.
-  float turnGoalDir = 0.F;
-  float turnRemaining = 0.F;
-  float turnSign = 1.F;
+inline auto droneModeName(DroneMode mode) -> const char * {
+  switch (mode) {
+  case DroneMode::Stopped:
+    return "Stopped";
+  case DroneMode::Accelerating:
+    return "Accelerating";
+  case DroneMode::Decelerating:
+    return "Decelerating";
+  case DroneMode::Turning:
+    return "Turning";
+  case DroneMode::Moving:
+    return "Moving";
+  }
+  return "Unknown";
+}
+
+struct DroneCommand {
+  DroneMode mode = DroneMode::Stopped;
+  float angleSpeed = 0.F;
+};
+
+struct DroneTelemetry {
+  Coord pos;
+  Coord speed; // вектор швидкості (величина * напрямок)
+  float direction = 0.F;
+  DroneMode mode = DroneMode::Stopped;
+  float timeSecSinceStart = 0.F;
 };
 
 struct SimStep {
   Coord pos;
   float direction = 0.F;
-  std::string state; // ім'я поточного стану (IDroneState::name())
+  std::string state; // ім'я поточного DroneMode з телеметрії
   int targetIdx = -1;
   Coord dropPoint;
   Coord aimPoint;
   Coord predictedTarget;
+  float timeSecSinceStart = 0.F;
 };
 
-// Знімок цілі в поточний момент часу симуляції: позиція та швидкість,
-// які повертає ITargetProvider для конкретного targetIdx.
 struct Target {
-  Coord position;
+  Coord pos;
   Coord velocity;
 };
 

@@ -1,11 +1,9 @@
 #pragma once
 
-#include "uav_ai/interfaces.hpp"
+#include "interfaces.hpp"
 
 namespace uav {
 
-// Читає config.json (параметри дрона/симуляції) та ammo.json (параметри
-// боєприпасів) з директорії даних, обирає ammo за назвою з конфігу.
 class FileConfigLoader : public IConfigLoader {
 public:
   auto load(const std::string &dataDir) -> bool override;

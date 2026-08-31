@@ -1,12 +1,9 @@
 #pragma once
 
-#include "uav_ai/interfaces.hpp"
+#include "interfaces.hpp"
 
 namespace uav {
 
-// Аналітичний розв'язок балістики (метод Кардано, формула з ДЗ1) з
-// урахуванням lead targeting: передбачає, де буде ціль на момент падіння
-// боєприпаса, і повертає точку скиду.
 class AnalyticalSolver : public IBallisticSolver {
 public:
   auto init(const AmmoParams &ammo, float attackSpeed, float altitude,
