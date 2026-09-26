@@ -7,11 +7,12 @@ out/
 CMakeCache.txt
 CMakeFiles/
 CTestTestfile.cmake
-Makefile
 cmake_install.cmake
 compile_commands.json
 install_manifest.txt
 _deps/
+
+Testing/
 
 # Python bytecode з'являється після перевірки launch-файлів і не потрібен у repo.
 __pycache__/
