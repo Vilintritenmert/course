@@ -1,9 +1,10 @@
-#include "types.hpp"
-#include "config_loader.hpp"
-#include "target_provider.hpp"
-#include <algorithm>
+#include "Drone.hpp"
+
 #include <cfloat>
 #include <cmath>
+
+#include "IConfigLoader.hpp"
+#include "ITargetProvider.hpp"
 
 DroneDetails::DroneDetails(const Config *config,
                            const AmmoConfig *ammoConfigObj)
@@ -15,6 +16,14 @@ DroneDetails::DroneDetails(const Config *config,
       _angularSpeed(config->getAngularSpeed()),
       _accelPath(config->getAccelPath()) {
   validateParameters();
+}
+
+float DroneDetails::normalizeAngle(float a) {
+  while (a > (float)M_PI)
+    a -= 2.0f * (float)M_PI;
+  while (a < -(float)M_PI)
+    a += 2.0f * (float)M_PI;
+  return a;
 }
 
 void DroneDetails::reset() {
@@ -59,6 +68,10 @@ int DroneDetails::selectTarget(ITargetProvider *targetProvider,
 
   return best;
 }
+
+float DroneDetails::getAcceleration() const {
+  return _attackSpeed * _attackSpeed / (2.0f * _accelPath);
+};
 
 void DroneDetails::updateDrone(float desiredDir, float &turnAngleLeft) {
   float angleDiff = normalizeAngle(desiredDir - getDirection());
@@ -138,5 +151,22 @@ void DroneDetails::updateDrone(float desiredDir, float &turnAngleLeft) {
         turnAngleLeft = 0.0f;
     }
     break;
+  }
+}
+
+void DroneDetails::setSpeed(float speed) { _speed = speed; };
+
+void DroneDetails::setDirection(float direction) {
+  _direction = normalizeAngle(direction);
+};
+
+void DroneDetails::setState(DroneState state) { _state = state; };
+
+void DroneDetails::setPosition(Position position) { _position = position; };
+
+void DroneDetails::validateParameters() const {
+  if (getAttackSpeed() <= 0.0f || getAccelPath() <= 0.0f ||
+      getAltitude() <= 0.0f) {
+    throw std::runtime_error("ERROR: Invalid parameters\n");
   }
 }

@@ -1,7 +1,9 @@
-#include "config_loader.hpp"
 #include <exception>
 #include <fstream>
 #include <nlohmann/json.hpp>
+
+#include "FileConfigLoader.hpp"
+#include "IConfigLoader.hpp"
 
 using json = nlohmann::json;
 

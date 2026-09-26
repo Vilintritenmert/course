@@ -1,6 +1,8 @@
 #pragma once
+
 #include <nlohmann/json.hpp>
 #include <string>
+
 using json = nlohmann::json;
 
 class JsonIOFailure : public std::exception {

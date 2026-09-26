@@ -11,3 +11,9 @@ touch "${DEVCONTAINER_DATA_ON_HOST}/.bash_history"
 # ~/.ssh має існувати до bind mount з devcontainer.json. На свіжих машинах
 # SSH ключів може ще не бути, і без цієї директорії container start падає.
 [ -d "${HOME}/.ssh" ] || mkdir -m 700 "${HOME}/.ssh"
+
+# ~/.claude.json і ~/.claude мають існувати до bind mount, інакше на
+# свіжих машинах (де Claude Code ще жодного разу не запускався) container
+# start падає через відсутнє джерело для mount-у.
+[ -f "${HOME}/.claude.json" ] || touch "${HOME}/.claude.json"
+[ -d "${HOME}/.claude" ] || mkdir "${HOME}/.claude"
