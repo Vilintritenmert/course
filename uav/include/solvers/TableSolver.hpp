@@ -1,11 +1,17 @@
 #pragma once
 
+#include <string>
+
+#include "BallisticTable.hpp"
 #include "IBallisticSolver.hpp"
 
-const float G = 9.81f;
+class TableSolver : public IBallisticSolver {
+private:
+  BallisticTable _table;
 
-class AnalyticalSolver : public IBallisticSolver {
 public:
+  explicit TableSolver(const std::string &tablePath = "data/ballistic_table.txt");
+
   float computeFlightTime(std::shared_ptr<DroneContext> droneDetails);
 
   float computeHorizDist(float t, std::shared_ptr<DroneContext> droneDetails);

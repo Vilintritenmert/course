@@ -1,62 +1,54 @@
 #pragma once
 
 #include <cmath>
+#include <memory>
 #include <nlohmann/json.hpp>
 
 #include "ComponentFactory.hpp"
-#include "Drone.hpp"
+#include "DroneContext.hpp"
 #include "Helper.hpp"
 #include "IBallisticSolver.hpp"
 #include "IConfigLoader.hpp"
+#include "IMissionState.hpp"
 #include "ITargetProvider.hpp"
+#include "MissionEngagement.hpp"
 #include "SimStep.hpp"
 #include "TimeManagement.hpp"
 
 using json = nlohmann::json;
 
-#define ENABLE_LOG 1
-#define ENABLE_DEBUG 0
-
-#if ENABLE_LOG
-#define LOG(msg) std::cout << "[LOG] " << msg << std::endl
-#else
-#define LOG(msg)
-#endif
-
-#if ENABLE_DEBUG
-#define DEBUG(msg) std::cout << "[DEBUG] " << msg << std::endl
-#else
-#define DEBUG(msg)
-#endif
-
 class MissionProcessor {
+  friend class StateNavigating;
+  friend class StateEngaging;
+
 private:
   static constexpr int MAX_STEPS = 10000;
 
-  ConfigLoaderOptions _configLoaderOptions;
-  ComponentFactory *_factory;
-  DroneDetails *_droneDetails;
-  TimeManagement *_timeManagement;
-  ITargetProvider *_targetProvider;
-  IBallisticSolver *_ballisticSolver;
-  const Config *_config;
+  std::shared_ptr<ConfigLoaderOptions> _configLoaderOptions;
+  std::unique_ptr<ComponentFactory> _factory;
+  std::shared_ptr<DroneContext> _droneDetails;
+  std::shared_ptr<TimeManagement> _timeManagement = nullptr;
+  std::unique_ptr<ITargetProvider> _targetProvider;
+  std::unique_ptr<IBallisticSolver> _ballisticSolver;
+  std::shared_ptr<Config> _config;
 
   std::vector<SimStep> _steps;
   int _totalSteps = 0;
   int _currentTarget = -1;
   int _step = 0;
 
-  bool _stagingMode = false;
   float _turnAngleLeft = 0.0f;
+
+  std::unique_ptr<IMissionState> _state;
 
   void fillOutputJson(json &output) const;
 
   void init();
 
 public:
-  MissionProcessor(ConfigLoaderOptions configLoaderOptions);
+  MissionProcessor(std::shared_ptr<ConfigLoaderOptions> configLoaderOptions);
 
-  ~MissionProcessor();
+  ~MissionProcessor() = default;
 
   bool hasNext() const;
 
