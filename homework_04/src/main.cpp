@@ -143,7 +143,7 @@ int main(int argc, char** argv)
 
     return 0;
   }
-  catch (std::invalid_argument e) {
+  catch (const std::invalid_argument& e) {
     std::cerr << "Something went wrong: " << e.what() << endl;
     return 1;
   }

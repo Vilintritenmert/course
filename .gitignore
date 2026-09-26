@@ -14,6 +14,10 @@ _deps/
 
 Testing/
 
+# Python bytecode з'являється після перевірки launch-файлів і не потрібен у repo.
+__pycache__/
+*.py[cod]
+
 # Мінімальний набір compiled/debug артефактів для C++ прикладів.
 *.d
 *.o
