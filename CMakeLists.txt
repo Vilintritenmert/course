@@ -17,6 +17,10 @@ set(DCMAKE_EXPORT_COMPILE_COMMANDS ON)
 include(FetchContent)
 include(GoogleTest)
 
+# Register tests from all subdirectories in the root build tree so the
+# documented `ctest --test-dir build/debug` command can discover them.
+enable_testing()
+
 FetchContent_Declare(
     googletest URL https://github.com/google/googletest/archive/refs/tags/v1.17.0.zip
     DOWNLOAD_EXTRACT_TIMESTAMP TRUE
