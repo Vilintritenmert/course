@@ -71,4 +71,4 @@ void FileConfigLoader::loadAmmo(const std::string &filePath) {
                            "`");
 }
 
-} // namespace uav
+}

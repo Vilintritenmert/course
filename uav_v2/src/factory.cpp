@@ -39,4 +39,4 @@ auto createLoader(LoaderType type) -> std::unique_ptr<IConfigLoader> {
   return nullptr;
 }
 
-} // namespace uav
+}

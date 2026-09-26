@@ -41,7 +41,6 @@ inline auto normalize(Coord c) -> Coord {
   return c / len;
 }
 
-// Приводить кут до діапазону (-pi, pi].
 inline auto normalizeAngle(float angle) -> float {
   while (angle > static_cast<float>(M_PI)) {
     angle -= 2.F * static_cast<float>(M_PI);
@@ -73,15 +72,11 @@ struct DroneConfig {
   float turnThreshold = 0.F;
 };
 
-// Стан дрона під час симуляції (позиція, курс, швидкість). Фаза (STOPPED /
-// ACCELERATING / ...) більше не зберігається тут як enum - нею керує
-// стейт-машина класів IDroneState (див. drone_state.hpp).
 struct Drone {
   Coord pos;
   float dir = 0.F;
   float speed = 0.F;
 
-  // Використовується під час TURNING: куди повертаємось, скільки часу лишилось.
   float turnGoalDir = 0.F;
   float turnRemaining = 0.F;
   float turnSign = 1.F;
@@ -90,15 +85,13 @@ struct Drone {
 struct SimStep {
   Coord pos;
   float direction = 0.F;
-  std::string state; // ім'я поточного стану (IDroneState::name())
+  std::string state;
   int targetIdx = -1;
   Coord dropPoint;
   Coord aimPoint;
   Coord predictedTarget;
 };
 
-// Знімок цілі в поточний момент часу симуляції: позиція та швидкість,
-// які повертає ITargetProvider для конкретного targetIdx.
 struct Target {
   Coord position;
   Coord velocity;
@@ -112,4 +105,4 @@ struct TargetCandidate {
   Coord predictedTarget;
 };
 
-} // namespace uav
+}

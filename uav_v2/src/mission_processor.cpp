@@ -176,4 +176,4 @@ void MissionProcessor::writeOutput(const std::string &outputPath) const {
   outFile << out.dump(2);
 }
 
-} // namespace uav
+}

@@ -7,8 +7,6 @@ namespace uav {
 
 namespace {
 
-// Орієнтовний час прольоту дистанції з розгоном/крейсерською швидкістю
-// (той самий трапецієподібний профіль, що й в AnalyticalSolver).
 auto estimateTravelTime(float distance, float cruiseSpeed, float acceleration,
                         float accelerationPath) -> float {
   if (distance <= 0.F) {
@@ -25,7 +23,7 @@ auto estimateTravelTime(float distance, float cruiseSpeed, float acceleration,
   return 2.F * peakSpeed / acceleration;
 }
 
-} // namespace
+}
 
 TableSolver::TableSolver(std::string tablePath) : tablePath_(std::move(tablePath)) {}
 
@@ -83,4 +81,4 @@ auto TableSolver::solve(const Coord &dronePos, const Target &target) const
   return candidate;
 }
 
-} // namespace uav
+}

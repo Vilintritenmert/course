@@ -7,10 +7,6 @@ namespace uav {
 
 namespace {
 
-// Спільна логіка для STOPPED / ACCELERATING / MOVING: якщо курс на ціль
-// відхиляється сильно - почати гальмування (щоб потім розвернутись на
-// місці), інакше довернути курс і або розганятись, або йти на
-// крейсерській швидкості.
 auto advanceTowardTarget(DroneContext &ctx) -> std::unique_ptr<IDroneState> {
   const float delta = normalizeAngle(ctx.desiredDir - ctx.direction);
 
@@ -42,7 +38,7 @@ auto advanceTowardTarget(DroneContext &ctx) -> std::unique_ptr<IDroneState> {
   return std::make_unique<StateMoving>();
 }
 
-} // namespace
+}
 
 auto StateStopped::execute(DroneContext &ctx) -> std::unique_ptr<IDroneState> {
   return advanceTowardTarget(ctx);
@@ -100,4 +96,4 @@ auto StateTurning::timeToStop(const DroneContext &ctx) const -> float {
   return ctx.turnRemaining;
 }
 
-} // namespace uav
+}

@@ -7,8 +7,6 @@ namespace uav {
 
 namespace {
 
-// Індекс нижнього вузла і коефіцієнт [0..1] для одного виміру. Значення за
-// межами осі - clamp до крайнього інтервалу (frac 0 або 1).
 struct Interp {
   int lo = 0;
   float frac = 0.F;
@@ -36,7 +34,7 @@ auto lerp(const BallisticTable::Result &a, const BallisticTable::Result &b,
   return {a.t + (b.t - a.t) * t, a.hDist + (b.hDist - a.hDist) * t};
 }
 
-} // namespace
+}
 
 auto BallisticTable::load(const std::string &path) -> bool {
   std::ifstream f(path);
@@ -75,7 +73,6 @@ auto BallisticTable::load(const std::string &path) -> bool {
   const size_t total = static_cast<size_t>(nZ) * nV * nM * nD * nL;
   data.resize(total);
 
-  // Порядок: Z0 -> V0 -> m -> d -> l (зовнішній -> внутрішній).
   for (size_t i = 0; i < total; ++i) {
     f >> data[i].t >> data[i].hDist;
   }
@@ -91,7 +88,6 @@ auto BallisticTable::lookup(float z0, float v0, float m, float d,
   const Interp id = findInterp(d, axisD);
   const Interp il = findInterp(l, axisL);
 
-  // l: 32 -> 16
   Result v[16];
   for (int a = 0; a < 2; a++) {
     for (int b = 0; b < 2; b++) {
@@ -107,7 +103,6 @@ auto BallisticTable::lookup(float z0, float v0, float m, float d,
     }
   }
 
-  // d: 16 -> 8
   Result w[8];
   for (int a = 0; a < 2; a++) {
     for (int b = 0; b < 2; b++) {
@@ -119,7 +114,6 @@ auto BallisticTable::lookup(float z0, float v0, float m, float d,
     }
   }
 
-  // m: 8 -> 4
   Result u[4];
   for (int a = 0; a < 2; a++) {
     for (int b = 0; b < 2; b++) {
@@ -128,14 +122,12 @@ auto BallisticTable::lookup(float z0, float v0, float m, float d,
     }
   }
 
-  // V0: 4 -> 2
   Result s[2];
   for (int a = 0; a < 2; a++) {
     s[a] = lerp(u[a * 2], u[(a * 2) + 1], iv.frac);
   }
 
-  // Z0: 2 -> 1
   return lerp(s[0], s[1], iz.frac);
 }
 
-} // namespace uav
+}

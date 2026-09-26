@@ -55,4 +55,4 @@ auto JsonTargetProvider::getTarget(int index) const -> Target {
   return target;
 }
 
-} // namespace uav
+}

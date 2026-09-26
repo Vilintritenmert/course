@@ -1,7 +1,5 @@
 cmake_minimum_required(VERSION 3.20)
 
-# Окремий CMake-проєкт для домашньої роботи 09 (uav_v2). Його можна збирати
-# як через root CMakeLists.txt, так і напряму з цієї директорії.
 project(uav_v2 CXX)
 
 set(CMAKE_CXX_STANDARD 20)

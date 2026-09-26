@@ -7,15 +7,9 @@
 
 namespace uav {
 
-// Табличний розв'язок балістики: замість аналітичного рівняння руху -
-// попередньо обчислена 5-вимірна таблиця (Z0, V0, m, d, l) з лінійною
-// інтерполяцією між вузлами. Логіка lead targeting (передбачення позиції
-// цілі, планування розгону/гальмування) така сама, як у AnalyticalSolver -
-// різниться лише джерело fallTime/horizontalDistance.
 class TableSolver : public IBallisticSolver {
 public:
-  // Шлях до файлу таблиці за замовчуванням (відносно робочої директорії
-  // запуску, поруч з іншими даними в data/).
+
   static constexpr const char *kDefaultTablePath = "data/ballistic_table.txt";
 
   explicit TableSolver(std::string tablePath = kDefaultTablePath);
@@ -41,4 +35,4 @@ private:
   bool ready_ = false;
 };
 
-} // namespace uav
+}

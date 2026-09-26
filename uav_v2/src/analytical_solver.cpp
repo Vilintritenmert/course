@@ -7,8 +7,6 @@ namespace uav {
 
 namespace {
 
-// Розв'язує кубічне рівняння часу польоту. Повертає false, якщо модель не
-// має фізично коректного розв'язку.
 auto computeTimeOfFlight(const AmmoParams &ammo, double attackSpeed,
                          double dropHeight, double &outTime) -> bool {
   const double m = ammo.mass;
@@ -28,9 +26,6 @@ auto computeTimeOfFlight(const AmmoParams &ammo, double attackSpeed,
   const double p = -(b * b) / (3. * a * a);
   const double q = (2. * b * b * b) / (27. * a * a * a) + c / a;
 
-  // Модель коректна лише для трьох дійсних коренів (p < 0) і коли аргумент
-  // арккосинуса потрапляє у [-1, 1] - на великих висотах спрощена модель не
-  // дає фізичного розв'язку.
   if (p >= 0.) {
     return false;
   }
@@ -52,7 +47,6 @@ auto computeTimeOfFlight(const AmmoParams &ammo, double attackSpeed,
   return true;
 }
 
-// Горизонтальна дистанція польоту боєприпаса за час t (степеневий ряд до t^5).
 auto computeHorizontalDistance(const AmmoParams &ammo, double attackSpeed,
                                double t) -> double {
   const double m = ammo.mass;
@@ -82,9 +76,6 @@ auto computeHorizontalDistance(const AmmoParams &ammo, double attackSpeed,
   return term1 - term2 + term3 + term4 + term5;
 }
 
-// Орієнтовний час прольоту дистанції з розгоном/крейсерською швидкістю
-// (трапецієподібний, або трикутний профіль швидкості, якщо шлях закороткий
-// для повного розгону).
 auto estimateTravelTime(float distance, float cruiseSpeed, float acceleration,
                         float accelerationPath) -> float {
   if (distance <= 0.F) {
@@ -101,7 +92,7 @@ auto estimateTravelTime(float distance, float cruiseSpeed, float acceleration,
   return 2.F * peakSpeed / acceleration;
 }
 
-} // namespace
+}
 
 auto AnalyticalSolver::init(const AmmoParams &ammo, float attackSpeed,
                             float altitude, float accelPath) -> bool {
@@ -152,4 +143,4 @@ auto AnalyticalSolver::solve(const Coord &dronePos, const Target &target) const
   return candidate;
 }
 
-} // namespace uav
+}

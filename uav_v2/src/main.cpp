@@ -1,7 +1,4 @@
-// ДЗ 9 (uav_v2): рефакторинг монолітного main() на набір класів з чіткими
-// інтерфейсами (ITargetProvider, IBallisticSolver, IConfigLoader),
-// створюваних через фабрику, і скомбінованих у MissionProcessor
-// (патерн Стратегія). Логіка симуляції не змінилась порівняно з ДЗ 8.
+
 
 #include <iostream>
 #include <memory>
@@ -23,9 +20,6 @@ auto main(int argc, char **argv) -> int {
   const std::string targetsPath = dataDir + "/targets.json";
   const std::string outputPath = dataDir + "/simulation.json";
 
-  // Компоненти створюються через фабрику - викликаючий код працює лише з
-  // інтерфейсами і не знає конкретних типів. Володіння передається у
-  // MissionProcessor разом з std::move() - назовні жодних сирих вказівників.
   std::unique_ptr<IConfigLoader> loader = createLoader(LoaderType::FILE);
   std::unique_ptr<ITargetProvider> provider = createProvider(ProviderType::JSON);
   std::unique_ptr<IBallisticSolver> solver = createSolver(SolverType::ANALYTICAL);
