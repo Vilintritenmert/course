@@ -23,8 +23,3 @@ target_link_libraries(ballistics_tests PRIVATE GTest::gtest_main)
 target_link_libraries(ballistics_tests PRIVATE ballistics)
 
 gtest_discover_tests(ballistics_tests DISCOVERY_MODE PRE_TEST)
-
-# Базові compiler warnings допомагають побачити підозрілі місця до runtime.
-target_compile_options(uav_balistics_check PRIVATE -Wall -Wextra -pedantic)
-
-enable_testing()
