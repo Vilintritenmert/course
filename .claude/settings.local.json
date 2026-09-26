@@ -1,0 +1,37 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(cmake --build . --target uav)",
+      "Bash(mkdir -p /tmp/uav_asan)",
+      "Bash(g++ -fsanitize=address,undefined -g -O0 -std=c++17 -I include -I build/_deps/nlohmann_json-src/include src/main.cpp src/config_loader.cpp src/types.cpp -o /tmp/uav_asan/uav_checker_asan)",
+      "Bash(clang++ -fsanitize=address,undefined -g -O0 -std=c++17 -I include -I build/_deps/nlohmann_json-src/include src/main.cpp src/config_loader.cpp src/types.cpp -o /tmp/uav_asan/uav_checker_asan)",
+      "Bash(clang++ -fsanitize=address,undefined -g -O0 -std=c++17 -I include -I build/_deps/nlohmann_json-src/include src/main.cpp src/config_loader.cpp src/types.cpp src/json_helper.cpp -o /tmp/uav_asan/uav_checker_asan)",
+      "Bash(cp data/simulation.json /tmp/uav_asan/simulation_backup.json)",
+      "Bash(mkdir -p /tmp/uav_asan/data)",
+      "Bash(cp data/*.json /tmp/uav_asan/data/)",
+      "Bash(/tmp/uav_asan/uav_checker_asan /tmp/uav_asan/data)",
+      "Bash(echo \"exit=$?\")",
+      "Bash(./build/uav_checker data *)",
+      "Bash(echo \"exit:$?\")",
+      "Bash(cmake --build build)",
+      "Bash(cmake --build .)",
+      "Bash(cmake --build . -j4)",
+      "Bash(cmake ..)",
+      "Bash(./uav_checker)",
+      "Bash(./uav_checker ../data)",
+      "Bash(echo \"exit: $?\")",
+      "Bash(cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug)",
+      "Bash(cmake --build build --target uav -j4)",
+      "Bash(exit 0)",
+      "Bash(cmake --build /home/vilintritenmert/course/build --target uav -j4)",
+      "Bash(cmake --build /home/vilintritenmert/course/build/debug --target uav -j4)",
+      "Read(//home/vilintritenmert/**)",
+      "Bash(find / -name targets.txt)",
+      "Bash(awk '{print NR\": \"NF}' /home/vilintritenmert/course/uav/data/targets.txt)",
+      "Bash(rm -rf build)",
+      "Read(//tmp/**)",
+      "Bash(curl -sL -o json.hpp https://raw.githubusercontent.com/nlohmann/json/v3.11.3/single_include/nlohmann/json.hpp)",
+      "Bash(cmake --build /tmp/claude-1000/uav_build -j4)"
+    ]
+  }
+}
