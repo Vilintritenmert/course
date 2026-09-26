@@ -3,8 +3,6 @@
   // студента, щоб відкрити репозиторій у devcontainer. C++ інструменти
   // встановлюється всередині контейнера через .devcontainer/devcontainer.json.
   "recommendations": [
-    "ms-vscode-remote.remote-containers",
-    "github.vscode-github-actions",
-    "ms-vscode.cpptools",
+    "ms-vscode-remote.remote-containers"
   ]
 }

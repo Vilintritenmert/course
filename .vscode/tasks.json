@@ -15,7 +15,6 @@
       "problemMatcher": [
         "$gcc"
       ],
-      "dependsOn": ["CMake: clean build directory"],
       "presentation": {
         "reveal": "always",
         "panel": "dedicated",
