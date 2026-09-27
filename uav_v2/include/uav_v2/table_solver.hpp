@@ -5,34 +5,36 @@
 #include "uav_v2/ballistic_table.hpp"
 #include "uav_v2/interfaces.hpp"
 
-namespace uav {
+namespace uav
+{
 
-class TableSolver : public IBallisticSolver {
-public:
+  class TableSolver : public IBallisticSolver
+  {
+  public:
+    static constexpr const char *kDefaultTablePath = "data/ballistic_table.txt";
 
-  static constexpr const char *kDefaultTablePath = "data/ballistic_table.txt";
+    explicit TableSolver(std::string tablePath = kDefaultTablePath);
 
-  explicit TableSolver(std::string tablePath = kDefaultTablePath);
+    void init(const AmmoParams &ammo, float attackSpeed, float altitude,
+              float accelPath) override;
+    auto solve(const Coord &dronePos, const Target &target) const
+        -> TargetCandidate override;
+    auto getHorizontalDistance() const -> float override
+    {
+      return horizontalDistance_;
+    }
 
-  void init(const AmmoParams &ammo, float attackSpeed, float altitude,
-            float accelPath) override;
-  auto solve(const Coord &dronePos, const Target &target) const
-      -> TargetCandidate override;
-  auto getHorizontalDistance() const -> float override {
-    return horizontalDistance_;
-  }
+  private:
+    std::string tablePath_;
+    BallisticTable table_;
+    bool tableLoaded_ = false;
 
-private:
-  std::string tablePath_;
-  BallisticTable table_;
-  bool tableLoaded_ = false;
-
-  float attackSpeed_ = 0.F;
-  float accelPath_ = 0.F;
-  float acceleration_ = 0.F;
-  float fallTime_ = 0.F;
-  float horizontalDistance_ = 0.F;
-  bool ready_ = false;
-};
+    float attackSpeed_ = 0.F;
+    float accelPath_ = 0.F;
+    float acceleration_ = 0.F;
+    float fallTime_ = 0.F;
+    float horizontalDistance_ = 0.F;
+    bool ready_ = false;
+  };
 
 }

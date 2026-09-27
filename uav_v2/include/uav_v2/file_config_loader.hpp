@@ -2,20 +2,22 @@
 
 #include "uav_v2/interfaces.hpp"
 
-namespace uav {
+namespace uav
+{
 
-class FileConfigLoader : public IConfigLoader {
-public:
-  void load(const std::string &dataDir) override;
-  auto getConfig() const -> const DroneConfig & override { return config_; }
-  auto getAmmoParams() const -> const AmmoParams & override { return ammo_; }
+  class FileConfigLoader : public IConfigLoader
+  {
+  public:
+    void load(const std::string &dataDir) override;
+    auto getConfig() const -> const DroneConfig & override { return config_; }
+    auto getAmmoParams() const -> const AmmoParams & override { return ammo_; }
 
-private:
-  void loadConfig(const std::string &filePath);
-  void loadAmmo(const std::string &filePath);
+  private:
+    void loadConfig(const std::string &filePath);
+    void loadAmmo(const std::string &filePath);
 
-  DroneConfig config_;
-  AmmoParams ammo_;
-};
+    DroneConfig config_;
+    AmmoParams ammo_;
+  };
 
 }

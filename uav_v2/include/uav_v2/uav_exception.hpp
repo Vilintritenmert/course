@@ -3,16 +3,18 @@
 #include <exception>
 #include <string>
 
-namespace uav {
+namespace uav
+{
 
-class UavException : public std::exception {
-public:
-  explicit UavException(std::string message) : message_(std::move(message)) {}
+  class UavException : public std::exception
+  {
+  public:
+    explicit UavException(std::string message) : message_(std::move(message)) {}
 
-  auto what() const noexcept -> const char * override { return message_.c_str(); }
+    auto what() const noexcept -> const char * override { return message_.c_str(); }
 
-private:
-  std::string message_;
-};
+  private:
+    std::string message_;
+  };
 
 }
