@@ -4,11 +4,9 @@
 
 #include "uav_v2/types.hpp"
 
-namespace uav
-{
+namespace uav {
 
-  class IConfigLoader
-  {
+  class IConfigLoader {
   public:
     virtual void load(const std::string &dataDir) = 0;
     virtual auto getConfig() const -> const DroneConfig & = 0;
@@ -16,8 +14,7 @@ namespace uav
     virtual ~IConfigLoader() = default;
   };
 
-  class ITargetProvider
-  {
+  class ITargetProvider {
   public:
     virtual void load(const std::string &filePath) = 0;
     virtual auto getTargetCount() const -> int = 0;
@@ -32,17 +29,15 @@ namespace uav
     virtual ~ITargetProvider() = default;
   };
 
-  class IBallisticSolver
-  {
+  class IBallisticSolver {
   public:
     virtual void init(const AmmoParams &ammo, float attackSpeed, float altitude,
                       float accelPath) = 0;
-    virtual auto solve(const Coord &dronePos, const Target &target) const
-        -> TargetCandidate = 0;
+    virtual auto solve(const Coord &dronePos, const Target &target) const -> TargetCandidate = 0;
 
     virtual auto getHorizontalDistance() const -> float = 0;
 
     virtual ~IBallisticSolver() = default;
   };
 
-}
+} // namespace uav

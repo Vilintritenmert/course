@@ -8,20 +8,16 @@
 
 using json = nlohmann::json;
 
-namespace uav
-{
+namespace uav {
 
-  void FileConfigLoader::load(const std::string &dataDir)
-  {
+  void FileConfigLoader::load(const std::string &dataDir) {
     loadConfig(dataDir + "/config.json");
     loadAmmo(dataDir + "/ammo.json");
   }
 
-  void FileConfigLoader::loadConfig(const std::string &filePath)
-  {
+  void FileConfigLoader::loadConfig(const std::string &filePath) {
     std::ifstream file(filePath);
-    if (!file.is_open())
-    {
+    if (!file.is_open()) {
       throw UavException("Error: cannot open `" + filePath + "`");
     }
 
@@ -43,30 +39,23 @@ namespace uav
     config_.hitRadius = j["simulation"]["hitRadius"];
     config_.arrayTimeStep = j["targetArrayTimeStep"];
 
-    if (config_.attackSpeed <= 0.F || config_.accelPath <= 0.F ||
-        config_.arrayTimeStep <= 0.F || config_.simTimeStep <= 0.F ||
-        config_.angularSpeed <= 0.F)
-    {
-      throw UavException("Error: `" + filePath +
-                         "` has invalid (non-positive) parameters");
+    if (config_.attackSpeed <= 0.F || config_.accelPath <= 0.F || config_.arrayTimeStep <= 0.F ||
+        config_.simTimeStep <= 0.F || config_.angularSpeed <= 0.F) {
+      throw UavException("Error: `" + filePath + "` has invalid (non-positive) parameters");
     }
   }
 
-  void FileConfigLoader::loadAmmo(const std::string &filePath)
-  {
+  void FileConfigLoader::loadAmmo(const std::string &filePath) {
     std::ifstream file(filePath);
-    if (!file.is_open())
-    {
+    if (!file.is_open()) {
       throw UavException("Error: cannot open `" + filePath + "`");
     }
 
     json j;
     file >> j;
 
-    for (const auto &entry : j)
-    {
-      if (entry["name"].get<std::string>() != config_.ammoName)
-      {
+    for (const auto &entry : j) {
+      if (entry["name"].get<std::string>() != config_.ammoName) {
         continue;
       }
       ammo_.name = entry["name"].get<std::string>();
@@ -76,8 +65,7 @@ namespace uav
       return;
     }
 
-    throw UavException("Error: unknown ammo type `" + config_.ammoName +
-                       "`");
+    throw UavException("Error: unknown ammo type `" + config_.ammoName + "`");
   }
 
-}
+} // namespace uav

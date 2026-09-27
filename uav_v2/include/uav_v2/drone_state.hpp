@@ -4,11 +4,9 @@
 
 #include "uav_v2/types.hpp"
 
-namespace uav
-{
+namespace uav {
 
-  struct DroneContext
-  {
+  struct DroneContext {
     Coord &pos;
     float &direction;
     float &speed;
@@ -21,15 +19,13 @@ namespace uav
     const DroneConfig &cfg;
   };
 
-  class IDroneState
-  {
+  class IDroneState {
   public:
     virtual ~IDroneState() = default;
 
     virtual auto execute(DroneContext &ctx) -> std::unique_ptr<IDroneState> = 0;
 
-    virtual auto timeToStop(const DroneContext &ctx) const -> float
-    {
+    virtual auto timeToStop(const DroneContext &ctx) const -> float {
       (void)ctx;
       return 0.F;
     }
@@ -37,43 +33,38 @@ namespace uav
     virtual auto name() const -> const char * = 0;
   };
 
-  class StateStopped : public IDroneState
-  {
+  class StateStopped : public IDroneState {
   public:
     auto execute(DroneContext &ctx) -> std::unique_ptr<IDroneState> override;
     auto name() const -> const char * override { return "Stopped"; }
   };
 
-  class StateAccelerating : public IDroneState
-  {
+  class StateAccelerating : public IDroneState {
   public:
     auto execute(DroneContext &ctx) -> std::unique_ptr<IDroneState> override;
     auto timeToStop(const DroneContext &ctx) const -> float override;
     auto name() const -> const char * override { return "Accelerating"; }
   };
 
-  class StateDecelerating : public IDroneState
-  {
+  class StateDecelerating : public IDroneState {
   public:
     auto execute(DroneContext &ctx) -> std::unique_ptr<IDroneState> override;
     auto timeToStop(const DroneContext &ctx) const -> float override;
     auto name() const -> const char * override { return "Decelerating"; }
   };
 
-  class StateTurning : public IDroneState
-  {
+  class StateTurning : public IDroneState {
   public:
     auto execute(DroneContext &ctx) -> std::unique_ptr<IDroneState> override;
     auto timeToStop(const DroneContext &ctx) const -> float override;
     auto name() const -> const char * override { return "Turning"; }
   };
 
-  class StateMoving : public IDroneState
-  {
+  class StateMoving : public IDroneState {
   public:
     auto execute(DroneContext &ctx) -> std::unique_ptr<IDroneState> override;
     auto timeToStop(const DroneContext &ctx) const -> float override;
     auto name() const -> const char * override { return "Moving"; }
   };
 
-}
+} // namespace uav

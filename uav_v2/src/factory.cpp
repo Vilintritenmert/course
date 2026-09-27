@@ -5,13 +5,10 @@
 #include "uav_v2/json_target_provider.hpp"
 #include "uav_v2/table_solver.hpp"
 
-namespace uav
-{
+namespace uav {
 
-  auto createSolver(SolverType type) -> std::unique_ptr<IBallisticSolver>
-  {
-    switch (type)
-    {
+  auto createSolver(SolverType type) -> std::unique_ptr<IBallisticSolver> {
+    switch (type) {
     case SolverType::ANALYTICAL:
       return std::make_unique<AnalyticalSolver>();
     case SolverType::TABLE:
@@ -20,31 +17,26 @@ namespace uav
     return nullptr;
   }
 
-  auto createProvider(ProviderType type, const std::string &path)
-      -> std::unique_ptr<ITargetProvider>
-  {
+  auto createProvider(ProviderType type,
+                      const std::string &path) -> std::unique_ptr<ITargetProvider> {
     std::unique_ptr<ITargetProvider> provider;
-    switch (type)
-    {
+    switch (type) {
     case ProviderType::JSON:
       provider = std::make_unique<JsonTargetProvider>();
       break;
     }
-    if (provider != nullptr && !path.empty())
-    {
+    if (provider != nullptr && !path.empty()) {
       provider->load(path);
     }
     return provider;
   }
 
-  auto createLoader(LoaderType type) -> std::unique_ptr<IConfigLoader>
-  {
-    switch (type)
-    {
+  auto createLoader(LoaderType type) -> std::unique_ptr<IConfigLoader> {
+    switch (type) {
     case LoaderType::FILE:
       return std::make_unique<FileConfigLoader>();
     }
     return nullptr;
   }
 
-}
+} // namespace uav

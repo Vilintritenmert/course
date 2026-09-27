@@ -5,22 +5,17 @@
 #include <algorithm>
 #include <cmath>
 
-namespace uav
-{
+namespace uav {
 
-  namespace
-  {
+  namespace {
 
     auto estimateTravelTime(float distance, float cruiseSpeed, float acceleration,
-                            float accelerationPath) -> float
-    {
-      if (distance <= 0.F)
-      {
+                            float accelerationPath) -> float {
+      if (distance <= 0.F) {
         return 0.F;
       }
 
-      if (distance >= 2.F * accelerationPath)
-      {
+      if (distance >= 2.F * accelerationPath) {
         const float accelTime = cruiseSpeed / acceleration;
         const float cruiseDist = distance - 2.F * accelerationPath;
         return 2.F * accelTime + cruiseDist / cruiseSpeed;
@@ -30,17 +25,16 @@ namespace uav
       return 2.F * peakSpeed / acceleration;
     }
 
+  } // namespace
+
+  TableSolver::TableSolver(std::string tablePath) : tablePath_(std::move(tablePath)) {
   }
 
-  TableSolver::TableSolver(std::string tablePath) : tablePath_(std::move(tablePath)) {}
-
-  void TableSolver::init(const AmmoParams &ammo, float attackSpeed,
-                         float altitude, float accelPath)
-  {
+  void TableSolver::init(const AmmoParams &ammo, float attackSpeed, float altitude,
+                         float accelPath) {
     ready_ = false;
 
-    if (!tableLoaded_)
-    {
+    if (!tableLoaded_) {
       table_.load(tablePath_);
       tableLoaded_ = true;
     }
@@ -55,28 +49,23 @@ namespace uav
     acceleration_ = (attackSpeed_ * attackSpeed_) / (2.F * accelPath_);
 
     ready_ = fallTime_ > 0.F;
-    if (!ready_)
-    {
+    if (!ready_) {
       throw UavException("Error: failed to initialize table solver");
     }
   }
 
-  auto TableSolver::solve(const Coord &dronePos, const Target &target) const
-      -> TargetCandidate
-  {
+  auto TableSolver::solve(const Coord &dronePos, const Target &target) const -> TargetCandidate {
     TargetCandidate candidate;
-    if (!ready_)
-    {
+    if (!ready_) {
       throw UavException("Error: table solver is not initialized");
     }
 
     const float distNow = length(target.position - dronePos);
     const float roughReleaseDist = std::max(0.F, distNow - horizontalDistance_);
-    const float orientTotalTime = estimateTravelTime(
-        roughReleaseDist, attackSpeed_, acceleration_, accelPath_);
+    const float orientTotalTime =
+        estimateTravelTime(roughReleaseDist, attackSpeed_, acceleration_, accelPath_);
 
-    const Coord predicted =
-        target.position + target.velocity * (orientTotalTime + fallTime_);
+    const Coord predicted = target.position + target.velocity * (orientTotalTime + fallTime_);
 
     const Coord delta = predicted - dronePos;
     const float distToPredicted = length(delta);
@@ -86,11 +75,10 @@ namespace uav
     candidate.valid = true;
     candidate.heading = heading;
     candidate.releasePoint = predicted - normalize(delta) * releaseDist;
-    candidate.totalTime =
-        estimateTravelTime(releaseDist, attackSpeed_, acceleration_, accelPath_);
+    candidate.totalTime = estimateTravelTime(releaseDist, attackSpeed_, acceleration_, accelPath_);
     candidate.predictedTarget = predicted;
 
     return candidate;
   }
 
-}
+} // namespace uav

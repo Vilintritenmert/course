@@ -13,20 +13,18 @@
 
 using json = nlohmann::json;
 
-namespace uav
-{
+namespace uav {
 
   MissionProcessor::MissionProcessor(std::unique_ptr<IConfigLoader> configLoader,
                                      std::unique_ptr<ITargetProvider> provider,
                                      std::unique_ptr<IBallisticSolver> solver)
       : configLoader_(std::move(configLoader)), provider_(std::move(provider)),
-        solver_(std::move(solver)) {}
+        solver_(std::move(solver)) {
+  }
 
   MissionProcessor::~MissionProcessor() = default;
 
-  void MissionProcessor::init(const std::string &dataDir,
-                              const std::string &targetsPath)
-  {
+  void MissionProcessor::init(const std::string &dataDir, const std::string &targetsPath) {
     initialized_ = false;
 
     configLoader_->load(dataDir);
@@ -37,8 +35,7 @@ namespace uav
     provider_->setArrayTimeStep(config_.arrayTimeStep);
     provider_->reset();
 
-    solver_->init(ammo_, config_.attackSpeed, config_.altitude,
-                  config_.accelPath);
+    solver_->init(ammo_, config_.attackSpeed, config_.altitude, config_.accelPath);
 
     resetDrone();
     history_.clear();
@@ -49,8 +46,7 @@ namespace uav
     initialized_ = true;
   }
 
-  void MissionProcessor::resetDrone()
-  {
+  void MissionProcessor::resetDrone() {
     drone_ = Drone();
     drone_.pos = config_.startPos;
     drone_.dir = config_.initialDir;
@@ -58,21 +54,17 @@ namespace uav
     state_ = std::make_unique<StateStopped>();
   }
 
-  auto MissionProcessor::hasNext() const -> bool
-  {
+  auto MissionProcessor::hasNext() const -> bool {
     return initialized_ && !finished_ && stepCount_ < MAX_STEPS;
   }
 
-  void MissionProcessor::step()
-  {
-    if (!hasNext())
-    {
+  void MissionProcessor::step() {
+    if (!hasNext()) {
       return;
     }
 
     const int targetCount = provider_->getTargetCount();
-    if (targetCount <= 0)
-    {
+    if (targetCount <= 0) {
       finished_ = true;
       return;
     }
@@ -80,28 +72,29 @@ namespace uav
     const float acceleration =
         (config_.attackSpeed * config_.attackSpeed) / (2.F * config_.accelPath);
 
-    DroneContext ctx{drone_.pos, drone_.dir, drone_.speed,
-                     drone_.turnGoalDir, drone_.turnRemaining,
-                     drone_.turnSign, 0.F, acceleration,
+    DroneContext ctx{drone_.pos,
+                     drone_.dir,
+                     drone_.speed,
+                     drone_.turnGoalDir,
+                     drone_.turnRemaining,
+                     drone_.turnSign,
+                     0.F,
+                     acceleration,
                      config_};
 
     std::vector<TargetCandidate> candidates(targetCount);
-    for (int i = 0; i < targetCount; ++i)
-    {
+    for (int i = 0; i < targetCount; ++i) {
       candidates[i] = solver_->solve(drone_.pos, provider_->getTarget(i));
     }
 
     int bestTarget = 0;
     float bestEffectiveTime = std::numeric_limits<float>::max();
-    for (int i = 0; i < targetCount; ++i)
-    {
+    for (int i = 0; i < targetCount; ++i) {
       float effectiveTime = candidates[i].totalTime;
-      if (i != selectedTarget_)
-      {
+      if (i != selectedTarget_) {
         effectiveTime += state_->timeToStop(ctx);
       }
-      if (effectiveTime < bestEffectiveTime)
-      {
+      if (effectiveTime < bestEffectiveTime) {
         bestEffectiveTime = effectiveTime;
         bestTarget = i;
       }
@@ -113,8 +106,7 @@ namespace uav
 
     ctx.desiredDir = chosen.heading;
     auto next = state_->execute(ctx);
-    if (next)
-    {
+    if (next) {
       state_ = std::move(next);
     }
 
@@ -134,14 +126,12 @@ namespace uav
     currentTime_ += dt;
 
     const float distToRelease = length(chosen.releasePoint - drone_.pos);
-    if (distToRelease <= config_.hitRadius || stepCount_ >= MAX_STEPS)
-    {
+    if (distToRelease <= config_.hitRadius || stepCount_ >= MAX_STEPS) {
       finished_ = true;
     }
   }
 
-  void MissionProcessor::reset()
-  {
+  void MissionProcessor::reset() {
     resetDrone();
     provider_->reset();
     history_.clear();
@@ -151,20 +141,17 @@ namespace uav
     finished_ = false;
   }
 
-  void MissionProcessor::changeSolver(std::unique_ptr<IBallisticSolver> solver)
-  {
+  void MissionProcessor::changeSolver(std::unique_ptr<IBallisticSolver> solver) {
     solver_ = std::move(solver);
     solver_->init(ammo_, config_.attackSpeed, config_.altitude, config_.accelPath);
   }
 
-  void MissionProcessor::writeOutput(const std::string &outputPath) const
-  {
+  void MissionProcessor::writeOutput(const std::string &outputPath) const {
     json out;
     out["totalSteps"] = static_cast<int>(history_.size());
     out["steps"] = json::array();
 
-    for (const auto &s : history_)
-    {
+    for (const auto &s : history_) {
       json step;
       step["position"] = {{"x", s.pos.x}, {"y", s.pos.y}};
       step["direction"] = s.direction;
@@ -172,18 +159,15 @@ namespace uav
       step["targetIndex"] = s.targetIdx;
       step["dropPoint"] = {{"x", s.dropPoint.x}, {"y", s.dropPoint.y}};
       step["aimPoint"] = {{"x", s.aimPoint.x}, {"y", s.aimPoint.y}};
-      step["predictedTarget"] = {{"x", s.predictedTarget.x},
-                                 {"y", s.predictedTarget.y}};
+      step["predictedTarget"] = {{"x", s.predictedTarget.x}, {"y", s.predictedTarget.y}};
       out["steps"].push_back(step);
     }
 
     std::ofstream outFile(outputPath);
-    if (!outFile.is_open())
-    {
-      throw UavException("Error: cannot open `" + outputPath +
-                         "` for writing");
+    if (!outFile.is_open()) {
+      throw UavException("Error: cannot open `" + outputPath + "` for writing");
     }
     outFile << out.dump(2);
   }
 
-}
+} // namespace uav

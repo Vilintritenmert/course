@@ -5,33 +5,26 @@
 #include <algorithm>
 #include <fstream>
 
-namespace uav
-{
+namespace uav {
 
-  namespace
-  {
+  namespace {
 
-    struct Interp
-    {
+    struct Interp {
       int lo = 0;
       float frac = 0.F;
     };
 
-    auto findInterp(float val, const std::vector<float> &axis) -> Interp
-    {
-      if (val <= axis.front())
-      {
+    auto findInterp(float val, const std::vector<float> &axis) -> Interp {
+      if (val <= axis.front()) {
         return {0, 0.F};
       }
-      if (val >= axis.back())
-      {
+      if (val >= axis.back()) {
         return {static_cast<int>(axis.size()) - 2, 1.F};
       }
 
       auto it = std::lower_bound(axis.begin(), axis.end(), val);
       int i = static_cast<int>(it - axis.begin()) - 1;
-      if (i < 0)
-      {
+      if (i < 0) {
         i = 0;
       }
       const float frac = (val - axis[i]) / (axis[i + 1] - axis[i]);
@@ -39,18 +32,15 @@ namespace uav
     }
 
     auto lerp(const BallisticTable::Result &a, const BallisticTable::Result &b,
-              float t) -> BallisticTable::Result
-    {
+              float t) -> BallisticTable::Result {
       return {a.t + (b.t - a.t) * t, a.hDist + (b.hDist - a.hDist) * t};
     }
 
-  }
+  } // namespace
 
-  void BallisticTable::load(const std::string &path)
-  {
+  void BallisticTable::load(const std::string &path) {
     std::ifstream f(path);
-    if (!f.is_open())
-    {
+    if (!f.is_open()) {
       throw UavException("Error: cannot open `" + path + "`");
     }
 
@@ -62,48 +52,39 @@ namespace uav
     f >> nZ >> nV >> nM >> nD >> nL;
 
     axisZ0.resize(nZ);
-    for (auto &v : axisZ0)
-    {
+    for (auto &v : axisZ0) {
       f >> v;
     }
     axisV0.resize(nV);
-    for (auto &v : axisV0)
-    {
+    for (auto &v : axisV0) {
       f >> v;
     }
     axisM.resize(nM);
-    for (auto &v : axisM)
-    {
+    for (auto &v : axisM) {
       f >> v;
     }
     axisD.resize(nD);
-    for (auto &v : axisD)
-    {
+    for (auto &v : axisD) {
       f >> v;
     }
     axisL.resize(nL);
-    for (auto &v : axisL)
-    {
+    for (auto &v : axisL) {
       f >> v;
     }
 
     const size_t total = static_cast<size_t>(nZ) * nV * nM * nD * nL;
     data.resize(total);
 
-    for (size_t i = 0; i < total; ++i)
-    {
+    for (size_t i = 0; i < total; ++i) {
       f >> data[i].t >> data[i].hDist;
     }
 
-    if (!f.good() && !f.eof())
-    {
+    if (!f.good() && !f.eof()) {
       throw UavException("Error: failed to read ballistic table `" + path + "`");
     }
   }
 
-  auto BallisticTable::lookup(float z0, float v0, float m, float d,
-                              float l) const -> Result
-  {
+  auto BallisticTable::lookup(float z0, float v0, float m, float d, float l) const -> Result {
     const Interp iz = findInterp(z0, axisZ0);
     const Interp iv = findInterp(v0, axisV0);
     const Interp im = findInterp(m, axisM);
@@ -111,18 +92,12 @@ namespace uav
     const Interp il = findInterp(l, axisL);
 
     Result v[16];
-    for (int a = 0; a < 2; a++)
-    {
-      for (int b = 0; b < 2; b++)
-      {
-        for (int c = 0; c < 2; c++)
-        {
-          for (int e = 0; e < 2; e++)
-          {
-            const auto &lo =
-                at(iz.lo + a, iv.lo + b, im.lo + c, id.lo + e, il.lo);
-            const auto &hi =
-                at(iz.lo + a, iv.lo + b, im.lo + c, id.lo + e, il.lo + 1);
+    for (int a = 0; a < 2; a++) {
+      for (int b = 0; b < 2; b++) {
+        for (int c = 0; c < 2; c++) {
+          for (int e = 0; e < 2; e++) {
+            const auto &lo = at(iz.lo + a, iv.lo + b, im.lo + c, id.lo + e, il.lo);
+            const auto &hi = at(iz.lo + a, iv.lo + b, im.lo + c, id.lo + e, il.lo + 1);
             v[(a * 8) + (b * 4) + (c * 2) + e] = lerp(lo, hi, il.frac);
           }
         }
@@ -130,36 +105,28 @@ namespace uav
     }
 
     Result w[8];
-    for (int a = 0; a < 2; a++)
-    {
-      for (int b = 0; b < 2; b++)
-      {
-        for (int c = 0; c < 2; c++)
-        {
-          w[(a * 4) + (b * 2) + c] = lerp(v[(a * 8) + (b * 4) + (c * 2)],
-                                          v[(a * 8) + (b * 4) + (c * 2) + 1],
-                                          id.frac);
+    for (int a = 0; a < 2; a++) {
+      for (int b = 0; b < 2; b++) {
+        for (int c = 0; c < 2; c++) {
+          w[(a * 4) + (b * 2) + c] =
+              lerp(v[(a * 8) + (b * 4) + (c * 2)], v[(a * 8) + (b * 4) + (c * 2) + 1], id.frac);
         }
       }
     }
 
     Result u[4];
-    for (int a = 0; a < 2; a++)
-    {
-      for (int b = 0; b < 2; b++)
-      {
-        u[(a * 2) + b] = lerp(w[(a * 4) + (b * 2)], w[(a * 4) + (b * 2) + 1],
-                              im.frac);
+    for (int a = 0; a < 2; a++) {
+      for (int b = 0; b < 2; b++) {
+        u[(a * 2) + b] = lerp(w[(a * 4) + (b * 2)], w[(a * 4) + (b * 2) + 1], im.frac);
       }
     }
 
     Result s[2];
-    for (int a = 0; a < 2; a++)
-    {
+    for (int a = 0; a < 2; a++) {
       s[a] = lerp(u[a * 2], u[(a * 2) + 1], iv.frac);
     }
 
     return lerp(s[0], s[1], iz.frac);
   }
 
-}
+} // namespace uav

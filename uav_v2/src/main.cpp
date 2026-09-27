@@ -10,10 +10,8 @@
 
 using namespace uav;
 
-auto main(int argc, char **argv) -> int
-{
-  if (argc != 2)
-  {
+auto main(int argc, char **argv) -> int {
+  if (argc != 2) {
     std::cerr << "usage: uav_v2 <data_dir>\n";
     return 1;
   }
@@ -26,24 +24,19 @@ auto main(int argc, char **argv) -> int
   std::unique_ptr<ITargetProvider> provider = createProvider(ProviderType::JSON);
   std::unique_ptr<IBallisticSolver> solver = createSolver(SolverType::ANALYTICAL);
 
-  MissionProcessor mission(std::move(loader), std::move(provider),
-                           std::move(solver));
+  MissionProcessor mission(std::move(loader), std::move(provider), std::move(solver));
 
-  try
-  {
+  try {
     mission.init(dataDir, targetsPath);
 
-    while (mission.hasNext())
-    {
+    while (mission.hasNext()) {
       mission.step();
     }
 
     mission.writeOutput(outputPath);
     std::cout << "Simulation finished in " << mission.getStepCount()
               << " steps. Output: " << outputPath << '\n';
-  }
-  catch (const UavException &e)
-  {
+  } catch (const UavException &e) {
     std::cerr << e.what() << '\n';
     return 1;
   }

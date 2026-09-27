@@ -2,20 +2,13 @@
 
 #include "uav_v2/interfaces.hpp"
 
-namespace uav
-{
+namespace uav {
 
-  class AnalyticalSolver : public IBallisticSolver
-  {
+  class AnalyticalSolver : public IBallisticSolver {
   public:
-    void init(const AmmoParams &ammo, float attackSpeed, float altitude,
-              float accelPath) override;
-    auto solve(const Coord &dronePos, const Target &target) const
-        -> TargetCandidate override;
-    auto getHorizontalDistance() const -> float override
-    {
-      return horizontalDistance_;
-    }
+    void init(const AmmoParams &ammo, float attackSpeed, float altitude, float accelPath) override;
+    auto solve(const Coord &dronePos, const Target &target) const -> TargetCandidate override;
+    auto getHorizontalDistance() const -> float override { return horizontalDistance_; }
 
   private:
     AmmoParams ammo_;
@@ -27,4 +20,4 @@ namespace uav
     bool ready_ = false;
   };
 
-}
+} // namespace uav

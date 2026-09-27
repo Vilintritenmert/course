@@ -6,13 +6,11 @@
 
 #include "uav_v2/interfaces.hpp"
 
-namespace uav
-{
+namespace uav {
 
   class IDroneState;
 
-  class MissionProcessor
-  {
+  class MissionProcessor {
   public:
     MissionProcessor(std::unique_ptr<IConfigLoader> configLoader,
                      std::unique_ptr<ITargetProvider> provider,
@@ -53,4 +51,4 @@ namespace uav
     std::vector<SimStep> history_;
   };
 
-}
+} // namespace uav

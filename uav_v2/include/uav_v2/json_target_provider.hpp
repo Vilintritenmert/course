@@ -4,19 +4,14 @@
 
 #include "uav_v2/interfaces.hpp"
 
-namespace uav
-{
+namespace uav {
 
-  class JsonTargetProvider : public ITargetProvider
-  {
+  class JsonTargetProvider : public ITargetProvider {
   public:
     ~JsonTargetProvider() override = default;
 
     void load(const std::string &filePath) override;
-    auto getTargetCount() const -> int override
-    {
-      return static_cast<int>(trajectories_.size());
-    }
+    auto getTargetCount() const -> int override { return static_cast<int>(trajectories_.size()); }
     auto getTarget(int index) const -> Target override;
 
     void advance(float dt) override { currentTime_ += dt; }
@@ -34,4 +29,4 @@ namespace uav
     float currentTime_ = 0.F;
   };
 
-}
+} // namespace uav

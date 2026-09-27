@@ -3,11 +3,9 @@
 #include <exception>
 #include <string>
 
-namespace uav
-{
+namespace uav {
 
-  class UavException : public std::exception
-  {
+  class UavException : public std::exception {
   public:
     explicit UavException(std::string message) : message_(std::move(message)) {}
 
@@ -17,4 +15,4 @@ namespace uav
     std::string message_;
   };
 
-}
+} // namespace uav
