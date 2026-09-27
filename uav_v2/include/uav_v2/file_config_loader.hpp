@@ -6,7 +6,7 @@ namespace uav {
 
 class FileConfigLoader : public IConfigLoader {
 public:
-  auto load(const std::string &dataDir) -> bool override;
+  void load(const std::string &dataDir) override;
   auto getConfig() const -> const DroneConfig & override { return config_; }
   auto getAmmoParams() const -> const AmmoParams & override { return ammo_; }
 
